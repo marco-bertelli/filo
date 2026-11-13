@@ -12,9 +12,11 @@ The page is a working view. What is kept is the [flow file](flow-file.md), which
 
 **The flow in words.** Five to nine short parts: the idea, each main moment, how it ends, what does not change. Each says what was decided, why, and what follows, including the consequences nobody asked about. Somebody who reads only this should know how the flow works.
 
-<img src="img/page-map.png" alt="The map and the life of the main object" width="760">
+<img src="img/page-map.png" alt="The map" width="440">
 
 **The map.** One column per person, one band per moment (setting it up, everyday use, each other way in, each way it ends). A dark arrow is a handoff: the flow passes to somebody else. A step already met in an earlier band is drawn dashed. Filled tag: the step is new. Outlined tag: it changes.
+
+<img src="img/page-life.png" alt="The life of the main object" width="760">
 
 **The life of the main object.** Its states on a line, in the order of a normal life, with the jumps drawn as arcs. Only when the object has more than two states.
 

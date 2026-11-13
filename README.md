@@ -24,7 +24,7 @@ Coding agents are good at building what you describe. They are much worse at not
 **filo** (Italian for *thread*) adds the missing seat to the session: a mix of a senior developer and a flow manager. It reads how your system really works, leads you through the flow with small concrete questions, stops you when two answers do not fit, and hands back one page you can read in two minutes. Only when you approve that page is anything saved, and only then does code start.
 
 <p align="center">
-  <img src="docs/img/page-map.png" alt="The map of a flow: one column per person, one band per moment, arrows where the flow passes from one person to another" width="820">
+  <img src="docs/img/page-storyboard.png" alt="A flow drawn as a storyboard: one strip of frames per moment, each with who acts, what they see, and a sketch of the screens that change" width="820">
 </p>
 
 > **Beta.** filo works and has been used to decide real features, but it is young: the file format and the page may still change before 1.0. See [Status](#status).
@@ -67,8 +67,10 @@ The page is the same every time, so the tenth flow reads as fast as the first. I
 
 | | |
 |---|---|
-| <img src="docs/img/page-words.png" alt="The top of the page: the flow explained in words" width="400"> | <img src="docs/img/page-storyboard.png" alt="The storyboard: one strip of frames per moment, with a sketch of each screen that changes" width="400"> |
-| **The flow in words.** What was decided, why, and what follows from it. | **The storyboard.** One strip per moment, with a sketch of every screen that is new or changes. |
+| <img src="docs/img/page-map.png" alt="The map: one column per person, one band per moment, a dark arrow where the flow passes to somebody else" width="400"> | <img src="docs/img/page-words.png" alt="The top of the page: the flow explained in words" width="400"> |
+| **The map.** One column per person, one band per moment. A dark arrow is a handoff. | **The flow in words.** What was decided, why, and what follows from it. |
+
+Below them: the life of the main object, the storyboard shown above, every choice with who made it, and a table where every case the system knows has an answer.
 
 More in [docs/page.md](docs/page.md).
 
