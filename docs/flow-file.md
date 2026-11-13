@@ -53,6 +53,8 @@ A1. **<Step>** (<surface>; new | changed | same). What they see and do.
 - Given <actor> and <state>, when <action>, then <what they see>.
 ```
 
+A complete file, saved by a real session on the example app: [example/bookings.md](example/bookings.md).
+
 ## The sections
 
 **Purpose.** One sentence everything else is judged against. If a later change does not serve it, the change belongs to another flow.

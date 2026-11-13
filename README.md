@@ -24,8 +24,9 @@ Coding agents are good at building what you describe. They are much worse at not
 **filo** (Italian for *thread*) adds the missing seat to the session: a mix of a senior developer and a flow manager. It reads how your system really works, leads you through the flow with small concrete questions, stops you when two answers do not fit, and hands back one page you can read in two minutes. Only when you approve that page is anything saved, and only then does code start.
 
 <p align="center">
-  <img src="docs/img/page-storyboard.png" alt="A flow drawn as a storyboard: one strip of frames per moment, each with who acts, what they see, and a sketch of the screens that change" width="820">
+  <img src="docs/img/demo.gif" alt="A filo session: it reads the app, asks one question at a time, stops on an answer that contradicts two earlier ones, draws the flow as a page, and saves it once approved" width="820">
 </p>
+<p align="center"><sub>A real session on the example app in <code>evals/files/roombook</code>. The text is the session's own; waits are cut and three questions are shown out of five.</sub></p>
 
 > **Beta.** filo works and has been used to decide real features, but it is young: the file format and the page may still change before 1.0. See [Status](#status).
 
@@ -70,7 +71,11 @@ The page is the same every time, so the tenth flow reads as fast as the first. I
 | <img src="docs/img/page-map.png" alt="The map: one column per person, one band per moment, a dark arrow where the flow passes to somebody else" width="400"> | <img src="docs/img/page-words.png" alt="The top of the page: the flow explained in words" width="400"> |
 | **The map.** One column per person, one band per moment. A dark arrow is a handoff. | **The flow in words.** What was decided, why, and what follows from it. |
 
-Below them: the life of the main object, the storyboard shown above, every choice with who made it, and a table where every case the system knows has an answer.
+<p align="center">
+  <img src="docs/img/page-storyboard.png" alt="The storyboard: one strip of frames per moment, each with who acts, what they see, and a sketch of the screens that change" width="820">
+</p>
+
+**The storyboard.** One strip per moment, with a sketch of every screen that is new or changes. Around it: the life of the main object, every choice with who made it, and a table where every case the system knows has an answer.
 
 More in [docs/page.md](docs/page.md).
 
@@ -124,7 +129,7 @@ Approved 2026-11-13. Replaces: nothing.
 ## Scenarios       Given / when / then: the acceptance test
 ```
 
-The scenarios are the contract for the build: after implementation, each one either happens as written or is a deviation to bring back to you. Format reference: [docs/flow-file.md](docs/flow-file.md).
+The scenarios are the contract for the build: after implementation, each one either happens as written or is a deviation to bring back to you. Format reference: [docs/flow-file.md](docs/flow-file.md). A whole file, as the session in the demo above saved it: [docs/example/bookings.md](docs/example/bookings.md).
 
 ## When to use it
 

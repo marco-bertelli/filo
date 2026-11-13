@@ -8,3 +8,4 @@ First public beta.
 - `page`: draws the page of a flow that is already decided, from the conversation or from a saved flow file, including files saved in an older format.
 - The page: the flow in words, a map with one column per person and one band per moment, the life of the main object, a storyboard with screen sketches, open points, choices by who made them, a coverage table. Phone width, light and dark.
 - Two eval cases on a fictional room-booking app.
+- README: a demo recorded from a real session, and the flow file that session saved as an example.
