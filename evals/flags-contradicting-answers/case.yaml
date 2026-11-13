@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: flags-contradicting-answers
+expected_outcome: |
+  The session notices that the new answer (no emails about bookings, ever) does not fit with
+  answer 2 (an email when a booking expires), quotes both, and asks which one holds, with options.
+  It does not go on to another topic before that is settled, and changes no file.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,19 @@
+{
+  "name": "filo",
+  "owner": {
+    "name": "Marco Bertelli",
+    "url": "https://github.com/marco-bertelli"
+  },
+  "metadata": {
+    "description": "filo: decide a feature's flow before the code."
+  },
+  "plugins": [
+    {
+      "name": "filo",
+      "source": "./",
+      "description": "A flow design interview, run before code: it reads the system, asks one question at a time, flags contradictions, draws the decided flow as a page and saves it in the project.",
+      "category": "productivity",
+      "keywords": ["product-design", "user-flow", "interview", "planning", "spec"]
+    }
+  ]
+}

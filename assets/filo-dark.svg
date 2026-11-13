@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232 80" width="348" height="120" role="img" aria-label="filo">
+  <g transform="translate(8 8) scale(.5)">
+  <rect width="128" height="128" rx="28" fill="#2748c9"/>
+  <path d="M10 38H32C54 38 42 64 64 64C86 64 74 90 96 90H118" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="32" cy="38" r="11" fill="#ffffff"/>
+  <circle cx="64" cy="64" r="11" fill="#ffa877"/>
+  <circle cx="96" cy="90" r="11" fill="#ffffff"/>
+  </g>
+  <g transform="translate(96 8)" fill="none" stroke="#e6eaf1" stroke-width="9" stroke-linecap="round">
+    <path d="M14 60V20Q14 5 29 5"/>
+    <path d="M3 26H27"/>
+    <path d="M50 27V60"/>
+    <path d="M70 5V60"/>
+    <circle cx="104" cy="42" r="18"/>
+    <circle cx="50" cy="8" r="6.5" fill="#ffa877" stroke="none"/>
+  </g>
+</svg>

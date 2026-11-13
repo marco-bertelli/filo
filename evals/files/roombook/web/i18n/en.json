@@ -1,0 +1,21 @@
+{
+  "bookings.title": "My bookings",
+  "bookings.empty": "No bookings yet.",
+  "bookings.new": "New booking",
+  "bookings.submit": "Send for confirmation",
+  "bookings.cancel": "Cancel",
+  "bookings.confirm": "Confirm",
+  "status.draft": "Draft",
+  "status.pending": "Waiting for confirmation",
+  "status.confirmed": "Confirmed",
+  "status.cancelled": "Cancelled",
+  "newBooking.title": "New booking",
+  "newBooking.room": "Room",
+  "newBooking.start": "From",
+  "newBooking.end": "To",
+  "newBooking.save": "Save as draft",
+  "error.roomNotFound": "This room no longer exists.",
+  "error.generic": "Something went wrong. Try again.",
+  "notice.bookingConfirmed": "Your booking was confirmed.",
+  "notice.bookingCancelledByAdmin": "An admin cancelled your booking."
+}

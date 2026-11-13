@@ -1,0 +1,945 @@
+<meta charset="utf-8">
+<title>Booking sharing flow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* A flow board. First the map: one column per person, one band per moment, so no two stories
+   ever share an arrow. Then the same moments as a storyboard, each step with the screen it shows.
+   Colour says who acts; a filled tag says the step is new, an outlined one that it changes. */
+:root {
+  --bg: #f3f4f7; --surface: #ffffff; --ink: #171d27; --muted: #5a6575; --line: #dde2ea; --line-strong: #a3adbd;
+  --sketch: #f1f3f7; --sketch-line: #a5afbf;
+  --accent: #2748c9; --accent-soft: #e6eafb; --on-accent: #ffffff;
+  --gap: #b3261e; --gap-soft: #fbe8e6;
+  --incon: #8f5500; --incon-soft: #faefd8;
+  --unclear: #5f44b3; --unclear-soft: #ebe7fa;
+  --ok: #17754a; --ok-soft: #e0f2e8;
+  --a1: #2459c2; --a1s: #e4ecfb;
+  --a2: #b4490e; --a2s: #fbe9de;
+  --a3: #0e7757; --a3s: #ddf2e9;
+  --a4: #7740b3; --a4s: #efe7f9;
+  --a5: #ad2f6c; --a5s: #fae5ee;
+  --a6: #6f6200; --a6s: #f3edcc;
+  --on-actor: #ffffff;
+  --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f131a; --surface: #171d27; --ink: #e6eaf1; --muted: #99a5b6; --line: #2a3442; --line-strong: #5d6c82;
+    --sketch: #1c2430; --sketch-line: #5b6a80;
+    --accent: #91adff; --accent-soft: #1c2950; --on-accent: #0f131a;
+    --gap: #ff8f80; --gap-soft: #3a1c19;
+    --incon: #f0b35e; --incon-soft: #382911;
+    --unclear: #baa6f6; --unclear-soft: #292244;
+    --ok: #63d19a; --ok-soft: #143324;
+    --a1: #8db2ff; --a1s: #17274a;
+    --a2: #ffa877; --a2s: #3a2213;
+    --a3: #5fd2a9; --a3s: #11312a;
+    --a4: #c5a3f6; --a4s: #2b2046;
+    --a5: #f598c0; --a5s: #3c1b2c;
+    --a6: #d9c463; --a6s: #302c0f;
+    --on-actor: #0f131a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f131a; --surface: #171d27; --ink: #e6eaf1; --muted: #99a5b6; --line: #2a3442; --line-strong: #5d6c82;
+  --sketch: #1c2430; --sketch-line: #5b6a80;
+  --accent: #91adff; --accent-soft: #1c2950; --on-accent: #0f131a;
+  --gap: #ff8f80; --gap-soft: #3a1c19;
+  --incon: #f0b35e; --incon-soft: #382911;
+  --unclear: #baa6f6; --unclear-soft: #292244;
+  --ok: #63d19a; --ok-soft: #143324;
+  --a1: #8db2ff; --a1s: #17274a;
+  --a2: #ffa877; --a2s: #3a2213;
+  --a3: #5fd2a9; --a3s: #11312a;
+  --a4: #c5a3f6; --a4s: #2b2046;
+  --a5: #f598c0; --a5s: #3c1b2c;
+  --a6: #d9c463; --a6s: #302c0f;
+  --on-actor: #0f131a;
+  color-scheme: dark;
+}
+.act-1 { --c: var(--a1); --cs: var(--a1s); } .act-2 { --c: var(--a2); --cs: var(--a2s); }
+.act-3 { --c: var(--a3); --cs: var(--a3s); } .act-4 { --c: var(--a4); --cs: var(--a4s); }
+.act-5 { --c: var(--a5); --cs: var(--a5s); } .act-6 { --c: var(--a6); --cs: var(--a6s); }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5; }
+*, *::before, *::after { box-sizing: border-box; }
+h1, h2, h3, h4, p, ul, ol, fieldset, figure { margin: 0; padding: 0; }
+ul, ol { list-style: none; }
+fieldset { border: 0; min-width: 0; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.sheet {
+  max-width: 1200px; margin: 0 auto; padding-block: 36px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 52px;
+}
+.sheet > * { min-width: 0; }
+.broken { padding: 24px 16px; font-family: var(--mono); color: var(--gap); }
+
+/* small shared parts */
+.eyebrow { font: 500 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.chip {
+  display: inline-block; font: 500 12px var(--font); line-height: 1.7; padding: 0 9px; border-radius: 999px;
+  white-space: nowrap; background: var(--line); color: var(--muted);
+}
+.chip.gap, .num.gap, .pin.gap { background: var(--gap-soft); color: var(--gap); }
+.chip.inconsistency, .num.inconsistency, .pin.inconsistency { background: var(--incon-soft); color: var(--incon); }
+.chip.unclear, .num.unclear, .pin.unclear { background: var(--unclear-soft); color: var(--unclear); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.accent { background: var(--accent-soft); color: var(--accent); }
+.num, .pin {
+  display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px;
+  font: 500 12px var(--mono); font-variant-numeric: tabular-nums; text-decoration: none;
+  background: var(--line); color: var(--muted);
+}
+.av {
+  flex: none; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--c); color: var(--on-actor); font: 600 11px var(--mono);
+}
+.tag {
+  flex: none; font: 500 10px var(--mono); letter-spacing: .05em; text-transform: uppercase; line-height: 1.65;
+  padding: 0 7px; border-radius: 999px; white-space: nowrap;
+}
+.tag.new { background: var(--c); color: var(--on-actor); }
+.tag.changed { box-shadow: inset 0 0 0 1px var(--c); color: var(--c); }
+.tag.same { box-shadow: inset 0 0 0 1px var(--line); color: var(--muted); }
+.where { font: 400 11.5px var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.scroll { overflow-x: auto; }
+.wires { position: absolute; left: 0; top: 0; pointer-events: none; }
+.wire { fill: none; stroke: var(--line-strong); stroke-width: 1.5; }
+.wire.handoff { stroke: var(--ink); stroke-width: 1.75; }
+.head { fill: var(--line-strong); }
+.head.handoff { fill: var(--ink); }
+
+/* header */
+.top { display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: clamp(27px, 4.2vw, 38px); line-height: 1.1; font-weight: 600; letter-spacing: -.015em; text-wrap: balance; }
+.value { font-size: 18px; line-height: 1.45; max-width: 66ch; text-wrap: pretty; }
+.cast { display: flex; flex-wrap: wrap; gap: 12px 26px; margin-top: 4px; }
+.cast li { display: flex; gap: 9px; max-width: 290px; font-size: 13.5px; line-height: 1.35; }
+.cast strong { display: block; font-weight: 600; }
+.cast .who { color: var(--muted); }
+.counts { display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.counts a { text-decoration: none; }
+
+section, figure { display: flex; flex-direction: column; gap: 16px; }
+h2 { font-size: 21px; line-height: 1.2; font-weight: 600; text-wrap: balance; }
+h3 { font-size: 17px; line-height: 1.25; font-weight: 600; text-wrap: balance; }
+.lead { color: var(--muted); max-width: 72ch; }
+figcaption { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.legend { --c: var(--muted); display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.key { width: 34px; height: 10px; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the whole flow in words, reasons included */
+.words { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr)); gap: 0 44px; padding: 4px 20px 8px; }
+.words li { display: flex; flex-direction: column; gap: 5px; padding: 16px 0; border-bottom: 1px solid var(--line); break-inside: avoid; }
+.words h3 { font-size: 15.5px; }
+.words p { font-size: 15px; line-height: 1.55; text-wrap: pretty; }
+
+/* the map */
+.map .panel { max-width: calc(var(--n) * 250px + 36px); }
+.lanes {
+  --col: 128px;
+  position: relative; display: grid; grid-template-columns: repeat(var(--n), minmax(var(--col), 1fr));
+  column-gap: 22px; row-gap: 20px; padding: 16px 18px 22px;
+}
+.lane-head, .band, .node { position: relative; z-index: 1; }
+.lane-head { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 600; line-height: 1.25; }
+.band {
+  grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px;
+  margin-inline: -18px; padding: 12px 18px 0; border-top: 1px solid var(--line); background: var(--surface);
+}
+.band-n { font: 500 12px var(--mono); color: var(--muted); }
+.band-title { font-size: 14px; font-weight: 600; }
+.band-when { font-size: 13px; color: var(--muted); }
+.node {
+  justify-self: center; width: 100%; max-width: 230px; display: flex; flex-direction: column; gap: 3px;
+  padding: 7px 10px 8px; border-radius: 7px; text-decoration: none; color: var(--ink);
+  background: var(--cs); border: 1px solid color-mix(in srgb, var(--c) 42%, var(--surface)); border-left: 3px solid var(--c);
+}
+.node.same { background: var(--surface); border-color: var(--line-strong); border-left-color: var(--c); }
+.node.again { background: transparent; border-style: dashed; border-left-style: solid; }
+.node:hover { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 28%, transparent); }
+.node-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 17px; }
+.node-id { font: 500 11px var(--mono); color: var(--c); }
+.node-title { font-size: 13px; font-weight: 600; line-height: 1.25; }
+.lifeline { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 5; }
+
+/* the life of the main object */
+.states {
+  position: relative; display: flex; gap: 44px; min-width: min-content;
+  padding: var(--arc-a, 16px) 20px var(--arc-b, 16px);
+}
+.state {
+  position: relative; z-index: 1; flex: 1 1 0; min-width: 124px; max-width: 230px;
+  display: flex; flex-direction: column; gap: 3px; padding: 9px 12px 10px;
+  background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: 10px;
+}
+.state strong { font-size: 14px; font-weight: 600; line-height: 1.25; }
+.state span { font-size: 12.5px; line-height: 1.35; color: var(--muted); }
+
+/* the storyboard */
+.board { gap: 28px; }
+.path { display: flex; flex-direction: column; gap: 14px; }
+.path + .path { padding-top: 26px; border-top: 1px solid var(--line); }
+.path-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.strip { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 18px 36px; padding-right: 36px; }
+.frame {
+  position: relative; flex: 1 1 236px; max-width: 560px; min-width: 0; display: flex; flex-direction: column; gap: 9px;
+  padding: 11px 13px 14px; background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--c);
+  border-radius: 8px; scroll-margin-top: 16px;
+}
+.frame:target { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 32%, transparent); }
+.frame-head { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
+.frame-head .who { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.step-id { font: 500 12px var(--mono); color: var(--c); }
+.title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.title-row .tag { margin-top: 3px; }
+h4 { font-size: 15.5px; line-height: 1.3; font-weight: 600; text-wrap: balance; }
+.frame-body, .frame-text { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+@media (min-width: 900px) {
+  /* a short path has room: the screen sits beside its caption */
+  .roomy .frame-body.with-screen { display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 10fr); gap: 16px; align-items: start; }
+}
+.what, .today { font-size: 13.5px; line-height: 1.45; }
+.today { color: var(--muted); }
+.today strong { font-weight: 600; }
+.frame.again { flex: 0 1 210px; background: transparent; border-style: dashed; border-top-style: solid; }
+.again a { font-size: 13px; }
+.next {
+  position: absolute; right: -34px; top: 22px; width: 30px; height: 12px;
+  fill: none; stroke: var(--line-strong); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+}
+.next.handoff, .key.handoff { stroke: var(--ink); stroke-width: 1.75; }
+.branches { display: flex; flex-direction: column; gap: 8px; }
+.what ~ .branches, .today ~ .branches { border-top: 1px solid var(--line); padding-top: 10px; }
+.branches li { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; font-size: 13px; line-height: 1.4; }
+.branches strong { font-weight: 600; }
+.exit { color: var(--muted); }
+.pins { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* the sketch of a screen: a small window, deliberately rough */
+.sketch { border: 1px solid var(--sketch-line); border-radius: 6px; background: var(--sketch); overflow: hidden; font-size: 12.5px; line-height: 1.4; }
+.sk-bar { display: flex; align-items: center; gap: 8px; padding: 6px 9px; font-weight: 600; background: var(--surface); border-bottom: 1px solid var(--sketch-line); }
+.sk-bar::before {
+  content: ""; flex: none; width: 26px; height: 6px;
+  background: radial-gradient(circle at 3px 3px, var(--sketch-line) 2.6px, transparent 3px) 0 0 / 10px 6px repeat-x;
+}
+.sk-body { display: flex; flex-direction: column; gap: 7px; padding: 9px; }
+.sk-head { font-weight: 600; }
+.sk-field { display: flex; flex-direction: column; gap: 2px; }
+.sk-label { font-size: 11px; color: var(--muted); }
+.sk-input, .sk-list, .sk-btn { background: var(--surface); border: 1px solid var(--sketch-line); border-radius: 3px; }
+.sk-input { padding: 4px 6px; min-height: 26px; }
+.sk-list li { padding: 4px 6px; border-bottom: 1px solid var(--sketch-line); }
+.sk-list li:last-child { border-bottom: 0; }
+.sk-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+.sk-btn { padding: 3px 10px; }
+.sk-btn.primary { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.sk-note { background: var(--surface); border-left: 3px solid var(--sketch-line); padding: 5px 8px; border-radius: 2px; }
+.sk-box {
+  min-height: 46px; display: grid; place-items: center; text-align: center; padding: 6px; color: var(--muted);
+  border: 1px solid var(--sketch-line); border-radius: 3px;
+  background: repeating-linear-gradient(135deg, transparent 0 7px, var(--line) 7px 8px);
+}
+
+/* what is still open */
+.points { display: flex; flex-direction: column; gap: 14px; max-width: 880px; }
+.point { padding: 16px; display: flex; flex-direction: column; gap: 10px; scroll-margin-top: 16px; }
+.point-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.why { max-width: 72ch; }
+.options { display: flex; flex-direction: column; gap: 6px; }
+.option { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+.option:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.option input { margin: 4px 0 0; accent-color: var(--accent); }
+.option-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cost, .rec { font-size: 13.5px; color: var(--muted); }
+.cost-label { font-weight: 500; }
+.note, textarea { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; width: 100%; }
+.answers { display: flex; flex-direction: column; gap: 12px; max-width: 880px; }
+textarea { font-family: var(--mono); font-size: 13px; min-height: 96px; resize: vertical; }
+button { align-self: flex-start; font: 500 14px var(--font); color: var(--on-accent); background: var(--accent); border: 0; border-radius: 6px; padding: 9px 16px; cursor: pointer; }
+
+/* the choices, and the folded parts */
+.groups { display: flex; flex-direction: column; gap: 10px; }
+details.panel { padding: 0 16px; }
+summary { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 13px 0; cursor: pointer; font-size: 16px; font-weight: 600; list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: ""; flex: none; width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(-45deg); transition: transform .15s; }
+details[open] > summary::before { transform: rotate(45deg); }
+details > .lead { margin-bottom: 12px; }
+.decisions { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr)); column-gap: 32px; padding-bottom: 6px; }
+.decisions li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 8px; align-items: baseline; padding: 10px 0; border-top: 1px solid var(--line); }
+.decisions .n { font: 500 12px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.decisions .q { display: block; font-size: 13px; color: var(--muted); }
+.decisions .a { display: block; font-size: 14.5px; font-weight: 500; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; margin-bottom: 12px; }
+th { text-align: left; font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 0 14px 8px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 9px 14px 9px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.src { font: 400 12px var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.plain { display: flex; flex-direction: column; gap: 6px; max-width: 78ch; }
+.plain li { padding-left: 18px; position: relative; }
+.plain li::before { content: ""; position: absolute; left: 2px; top: .7em; width: 8px; height: 1.5px; background: var(--line-strong); }
+
+@media (max-width: 640px) {
+  .sheet { gap: 40px; }
+  .lanes { display: flex; flex-wrap: wrap; gap: 20px 24px; padding: 14px 12px 18px; }
+  .lane-head { display: none; }
+  .band { flex: 0 0 calc(100% + 24px); margin-inline: -12px; padding-inline: 12px; }
+  .lane-head + .band { border-top: 0; padding-top: 0; }
+  .node { flex: 0 1 auto; width: auto; min-width: 112px; max-width: min(100%, 210px); }
+  .states { flex-direction: column; gap: 30px; padding: 16px var(--arc-a, 16px) 16px var(--arc-b, 16px); }
+  .state { flex: none; max-width: none; }
+  .strip { flex-direction: column; align-items: stretch; gap: 34px; padding-right: 0; }
+  .frame, .frame.again { flex: none; max-width: none; }
+  .next { right: auto; left: 20px; top: auto; bottom: -23px; transform: rotate(90deg); }
+}
+@media (prefers-reduced-motion: reduce) { summary::before { transition: none; } }
+</style>
+
+<main class="sheet" id="flow"></main>
+
+<!--
+  HOW TO FILL THIS PAGE
+  Replace the <title> above and the whole JSON below. Nothing else changes: the page draws the
+  diagrams itself from this data. Keep it valid JSON, and never write "</script" inside it.
+
+  title       the flow's name, same as the <title>
+  status      where the work stands, for example "Draft 2 · 13 Nov 2026"
+  value       what the feature is for, in one sentence
+  summary[]   the whole flow explained in words, reasons included: five to nine parts, each
+              { "title": a few words, "text": two to four sentences }. One part for the idea, one
+              for each main moment or area the flow touches, one for how it ends, one for what
+              does not change. Each text says what was decided, why (what goes wrong today, or
+              what it protects), and what follows from it, the smaller things you decided
+              yourself included. 300 to 600 words in all. Somebody who reads only this knows
+              how the flow works and why. Plain words: no step ids, no code names.
+  labels      the page's fixed words: translate every one into the user's language
+  actors[]    name (two or three words: it heads a column of the map), who (one line), steps[]
+    step      id: one letter per actor and a number (A1, A2 ... B1 ...); the letter is the actor's badge,
+              title (a few words, starting with what the actor does), where (the surface or screen),
+              change: "new" | "changed" | "same" compared with today,
+              screen: the sketch, only for a screen that is new or changes. A list of blocks:
+                { "t": "bar",     "text": "..." }                  the screen's title bar (put it first)
+                { "t": "text",    "text": "..." }                  a line of text
+                { "t": "field",   "label": "...", "value": "..." } an input
+                { "t": "list",    "items": ["..."] }               rows
+                { "t": "buttons", "items": ["Cancel", "*Save"] }   a leading * marks the main one
+                { "t": "note",    "text": "..." }                  a message from the system
+                { "t": "box",     "text": "..." }                  a placeholder (image, chart, preview)
+              what: one sentence on what the person sees and does,
+              today: what happens here today (only when change is "changed"),
+              branches[]: kind (one or two words in the user's language: empty, error, not allowed,
+                          waiting ...), when, sees, exit (the way out),
+              points: numbers of the open points that bite on this step
+  paths[]     the flow in the order things happen. One path per moment: setting it up, the everyday
+              use, each other way in, each way it ends. A path is one story told start to end.
+              title: the moment, with its subject ("Sam shares a booking"),
+              when: optional, one short line on what starts it,
+              steps: the step ids in order, across actors: ["A1", "A2", "B1"].
+              A path never forks: two alternatives are two paths, and they may share steps.
+              Two paths differ in their steps: another outcome at the same steps (confirmed or
+              declined) is a branch of the step, not another path. A path that starts like an
+              earlier one begins at the last step they share, not from the top again.
+              Every step is in at least one path. Order them as a story: setting up, the everyday use,
+              the rarer ways in, then how it ends.
+  states      optional: the life of the main object, when it has more than two states.
+              title, nodes[] in the order of a normal life: id, label, how (how it gets there),
+              edges: [from, to] pairs
+  decisions[] every choice that made this flow: n, q (the question, short), a (the choice),
+              by: "you" (the user answered) | "me" (you chose, they can object) | "before" (already decided)
+  points[]    only what is still open: n, kind: "gap" | "inconsistency" | "unclear", title,
+              where, why (what happens to the person), options[]: key, text, cost,
+              recommended (an option key), because
+  coverage[]  every case the system knows: case, source (path:line),
+              status: "covered" | "unsupported" | "open",
+              ref: the step id, or what the person sees instead, or "point N"
+  out[]       what is out of this flow, on purpose
+-->
+<script type="application/json" id="flow-data">
+{
+  "title": "Booking sharing flow",
+  "status": "Draft 1 · example",
+  "value": "A member who booked a room can put the booking in a colleague's list, so the colleague stops asking where and when.",
+  "labels": {
+    "new": "New", "changed": "Changed", "same": "As today", "today": "Today",
+    "summary": "The flow in words",
+    "flow": "The flow", "flowCaption": "One column per person, one band per moment. Each band reads from its first step.",
+    "handoff": "passes to someone else",
+    "steps": "Step by step", "seen": "Shown in path",
+    "decisions": "The choices behind it", "by": { "you": "You", "me": "Proposed", "before": "Already decided" },
+    "points": "Still open", "recommended": "Recommended", "cost": "Cost", "note": "Note",
+    "kinds": { "gap": "Gap", "inconsistency": "Inconsistency", "unclear": "Unclear" },
+    "coverage": "Cases covered", "coverageLead": "Every case the system knows about, and where this flow answers it.",
+    "case": "Case", "source": "Source", "answer": "Answer",
+    "covered": "Covered", "unsupported": "Not supported", "open": "Open",
+    "out": "Out of this flow",
+    "answers": "Your answers", "answersLead": "Pick an option on each open point, add a note where you want, then paste this into the chat.",
+    "copy": "Copy answers", "copied": "Copied"
+  },
+  "summary": [
+    { "title": "The idea", "text": "Sharing exists so that a colleague knows where and when, and stops asking. It is not a way to manage a booking together: that is why the colleague can only look, and why everything else here stays small." },
+    { "title": "Sharing", "text": "Sam shares from the booking itself, by typing a colleague's name. Only a submitted booking can be shared, because a draft holds no room yet and would show the colleague something that may never exist. Guests are left out: they have no bookings page to find it in." },
+    { "title": "On the colleague's side", "text": "Dana hears about it through the notice the product already sends for a confirmation, so there is nothing new to learn. The booking then sits in her usual list, marked with who shared it and with no buttons, instead of in a separate place she would have to remember." },
+    { "title": "Taking it back", "text": "Sam can take a name off at any time. The row simply leaves Dana's list, with no notice: nothing she had planned changes, and a notice would only raise a question." },
+    { "title": "Still to decide", "text": "When the booking expires or is cancelled, Dana is told nothing today and would walk to a room that is not hers. The proposal is to send her the notice the owner already gets." }
+  ],
+  "actors": [
+    {
+      "name": "Sam, who booked",
+      "who": "Has a booking and wants a colleague to have it too.",
+      "steps": [
+        {
+          "id": "A1", "title": "Opens the booking", "where": "Web · /bookings", "change": "same",
+          "what": "Finds the booking in their list and opens it."
+        },
+        {
+          "id": "A2", "title": "Chooses who to share it with", "where": "Web · /bookings/:id", "change": "new",
+          "screen": [
+            { "t": "bar", "text": "Room Aurora · Mon 10:00" },
+            { "t": "field", "label": "Share with", "value": "Name or email of a colleague" },
+            { "t": "note", "text": "They will see this booking in their list. They cannot change it." },
+            { "t": "buttons", "items": ["Cancel", "*Share"] }
+          ],
+          "what": "Types a name, picks a colleague, shares.",
+          "branches": [
+            { "kind": "not allowed", "when": "the booking is a draft or cancelled", "sees": "no Share button, and a line saying only submitted bookings can be shared", "exit": "submits the booking first" },
+            { "kind": "error", "when": "the person is not in the team", "sees": "\"Nobody with this name in your team\"", "exit": "corrects the name; what they typed stays" }
+          ]
+        },
+        {
+          "id": "A3", "title": "Takes a name off", "where": "Web · /bookings/:id", "change": "new",
+          "screen": [
+            { "t": "bar", "text": "Room Aurora · Mon 10:00" },
+            { "t": "list", "items": ["Shared with Dana Reyes · Remove"] }
+          ],
+          "what": "The booking shows who it is shared with, and each name can be removed."
+        }
+      ]
+    },
+    {
+      "name": "Dana, a colleague",
+      "who": "Did not make the booking. Wants to know where and when.",
+      "steps": [
+        {
+          "id": "B1", "title": "Hears about it", "where": "Email and in-app notice", "change": "new",
+          "screen": [
+            { "t": "bar", "text": "Sam shared a booking with you" },
+            { "t": "text", "text": "Room Aurora, Monday at 10:00." },
+            { "t": "buttons", "items": ["*Open booking"] }
+          ],
+          "what": "Gets the same kind of notice the product already sends when a booking is confirmed."
+        },
+        {
+          "id": "B2", "title": "Finds it in their list", "where": "Web · /bookings", "change": "changed",
+          "today": "the list shows only the bookings the person made.",
+          "screen": [
+            { "t": "bar", "text": "My bookings" },
+            { "t": "list", "items": ["Room Aurora · Mon 10:00 · Confirmed · from Sam", "Room Kilo · Wed 09:00 · Draft"] }
+          ],
+          "what": "Shared bookings sit in the same list, marked with who shared them, with no buttons to change them.",
+          "branches": [
+            { "kind": "changed meanwhile", "when": "the owner cancels, or the booking expires", "sees": "the row stays one more day with its new state, and a notice says what happened", "exit": "nothing to do" }
+          ],
+          "points": [1]
+        },
+        {
+          "id": "B3", "title": "No longer has it", "where": "Web · /bookings", "change": "new",
+          "what": "The row leaves the list. No notice: nothing Dana had planned changes."
+        }
+      ]
+    }
+  ],
+  "paths": [
+    { "title": "Sam shares a booking", "when": "Any time after the booking is submitted.", "steps": ["A1", "A2", "B1", "B2"] },
+    { "title": "Sam takes it back", "steps": ["A1", "A3", "B3"] }
+  ],
+  "states": {
+    "title": "The life of a booking",
+    "nodes": [
+      { "id": "draft", "label": "Draft", "how": "saved, not sent" },
+      { "id": "pending", "label": "Waiting", "how": "sent for confirmation" },
+      { "id": "confirmed", "label": "Confirmed", "how": "an admin confirms" },
+      { "id": "expired", "label": "Expired", "how": "nobody confirms in 24 hours" },
+      { "id": "cancelled", "label": "Cancelled", "how": "the owner or an admin cancels" }
+    ],
+    "edges": [["draft", "pending"], ["pending", "confirmed"], ["pending", "expired"], ["pending", "cancelled"], ["confirmed", "cancelled"]]
+  },
+  "decisions": [
+    { "n": 1, "q": "What is sharing for?", "a": "So a colleague knows where and when. Not for managing the booking together.", "by": "you" },
+    { "n": 2, "q": "What can the colleague do with a shared booking?", "a": "Only look.", "by": "you" },
+    { "n": 3, "q": "Which bookings can be shared?", "a": "Submitted ones. A draft holds nothing yet.", "by": "me" },
+    { "n": 4, "q": "How does the colleague hear about it?", "a": "The notice the product already sends for a confirmation.", "by": "me" },
+    { "n": 5, "q": "Do guests take part?", "a": "No: guests have no bookings page.", "by": "before" }
+  ],
+  "points": [
+    {
+      "n": 1, "kind": "gap", "title": "The colleague is not told when the booking stops being valid",
+      "where": "Step B2 · server/jobs/expire-bookings.js:6",
+      "why": "The booking expires overnight, the row changes with no word, and the colleague walks to a room that is not theirs.",
+      "options": [
+        { "key": "A", "text": "Tell everybody the booking was shared with, with the notice the owner already gets.", "cost": "one more call in two places; reuses the existing notice" },
+        { "key": "B", "text": "Only show the new state in the list.", "cost": "nothing" }
+      ],
+      "recommended": "A", "because": "a shared booking that fails silently is worse than no sharing."
+    }
+  ],
+  "coverage": [
+    { "case": "State draft", "source": "server/models/booking.js:1", "status": "covered", "ref": "A2, not allowed" },
+    { "case": "State expired", "source": "server/models/booking.js:1", "status": "open", "ref": "point 1" },
+    { "case": "Role guest", "source": "server/roles.js:2", "status": "unsupported", "ref": "guests do not appear in the search" },
+    { "case": "Sharing from the mobile app", "source": "mobile/screens/Booking.tsx:40", "status": "unsupported", "ref": "the booking shows who it is shared with, and no Share button" }
+  ],
+  "out": [
+    "Letting the colleague change or cancel the booking.",
+    "Sharing with a whole team at once."
+  ]
+}
+</script>
+
+<script>
+(function () {
+  var root = document.getElementById('flow');
+  var d;
+  try {
+    d = JSON.parse(document.getElementById('flow-data').textContent);
+  } catch (e) {
+    root.className = 'broken';
+    root.textContent = 'flow-data is not valid JSON: ' + e.message;
+    return;
+  }
+
+  var L = d.labels || {};
+  var kinds = L.kinds || {};
+  var who = L.by || {};
+  var actors = d.actors || [];
+  var decisions = d.decisions || [];
+  var points = d.points || [];
+  var coverage = d.coverage || [];
+  var kindOf = {};
+  points.forEach(function (p) { kindOf[p.n] = p.kind; });
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function add(parent) {
+    for (var i = 1; i < arguments.length; i++) if (arguments[i]) parent.appendChild(arguments[i]);
+    return parent;
+  }
+  function labelled(cls, label, text) {
+    return add(el('p', cls), el('strong', null, label + ': '), document.createTextNode(text));
+  }
+  function list(cls, items) {
+    var ul = el('ul', cls);
+    items.forEach(function (i) { add(ul, el('li', null, i)); });
+    return ul;
+  }
+  function count(label, n, cls) { return el('span', 'chip ' + (cls || ''), label + ' ' + n); }
+  function section(title) { return add(el('section'), el('h2', null, title)); }
+
+  /* ---------- who and in what order ---------- */
+  var stepOf = {};
+  actors.forEach(function (a, i) {
+    var first = (a.steps || [])[0];
+    a.cls = 'act-' + (i % 6 + 1);
+    a.badge = ((first && /^[^\d\s]+/.exec(first.id)) || [String(a.name || '?').charAt(0)])[0].slice(0, 2).toUpperCase();
+    (a.steps || []).forEach(function (s) { s.actor = a; s.lane = i; stepOf[s.id] = s; });
+  });
+  function av(a) { var n = el('span', 'av', a.badge); n.setAttribute('aria-hidden', 'true'); return n; }
+
+  var paths = [], inPath = {};
+  (d.paths || []).forEach(function (p) {
+    var steps = (p.steps || []).map(function (id) { return stepOf[id]; }).filter(Boolean);
+    steps.forEach(function (s) { inPath[s.id] = true; });
+    if (steps.length) paths.push({ title: p.title, when: p.when, steps: steps });
+  });
+  // a step no path names still gets drawn: one path per actor, cut where a step is marked "apart"
+  actors.forEach(function (a) {
+    var run = [];
+    function flush() { if (run.length) paths.push({ title: a.name, steps: run }); run = []; }
+    (a.steps || []).forEach(function (s) {
+      if (inPath[s.id]) return;
+      if (s.apart) flush();
+      run.push(s);
+    });
+    flush();
+  });
+
+  /* ---------- drawing over laid-out boxes ----------
+     The boxes are ordinary HTML, so text wraps and nothing is ever cut. The lines are an SVG laid
+     over them, drawn from where the browser put each box and drawn again when the size changes. */
+  var NS = 'http://www.w3.org/2000/svg';
+  var drawn = 0;
+  function sv(tag, attrs) {
+    var n = document.createElementNS(NS, tag);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  function overlay(host, paint) {
+    var svg = sv('svg', { 'class': 'wires', 'aria-hidden': 'true' });
+    var id = 'head-' + (++drawn), frame;
+    add(host, svg);
+    function redraw() {
+      var base = host.getBoundingClientRect(), W = host.offsetWidth, H = host.offsetHeight;
+      while (svg.lastChild) svg.removeChild(svg.lastChild);
+      svg.setAttribute('width', W); svg.setAttribute('height', H); svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      var defs = svg.appendChild(sv('defs', {}));
+      ['', ' handoff'].forEach(function (kind, i) {
+        var m = sv('marker', { id: id + i, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 8, markerHeight: 8, markerUnits: 'userSpaceOnUse', orient: 'auto' });
+        m.appendChild(sv('path', { d: 'M0 .5L10 5L0 9.5z', 'class': 'head' + kind }));
+        defs.appendChild(m);
+      });
+      paint({
+        W: W, H: H,
+        box: function (n) {
+          var r = n.getBoundingClientRect();
+          return { l: r.left - base.left, r: r.right - base.left, t: r.top - base.top, b: r.bottom - base.top,
+            cx: (r.left + r.right) / 2 - base.left, cy: (r.top + r.bottom) / 2 - base.top };
+        },
+        wire: function (path, handoff) {
+          svg.appendChild(sv('path', { d: path, 'class': 'wire' + (handoff ? ' handoff' : ''), 'marker-end': 'url(#' + id + (handoff ? 1 : 0) + ')' }));
+        },
+        line: function (x1, y1, x2, y2, cls) { svg.appendChild(sv('line', { x1: x1, y1: y1, x2: x2, y2: y2, 'class': cls })); }
+      });
+    }
+    function later() { cancelAnimationFrame(frame); frame = requestAnimationFrame(redraw); }
+    if (window.ResizeObserver) new ResizeObserver(later).observe(host); else window.addEventListener('resize', later);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(later);
+    later();
+  }
+  function key(handoff) {
+    var s = sv('svg', { 'class': 'key' + (handoff ? ' handoff' : ''), viewBox: '0 0 34 10', 'aria-hidden': 'true' });
+    s.appendChild(sv('path', { d: 'M1 5H31M26 1.5L32 5L26 8.5', stroke: 'currentColor' }));
+    return s;
+  }
+
+  /* ---------- the map: one column per actor, one band per path ---------- */
+  function mapFigure() {
+    var lanes = el('div', 'lanes'), heads = [], links = [], row = 1, met = {};
+    actors.forEach(function (a, i) {
+      var h = add(el('div', 'lane-head ' + a.cls), av(a), el('span', null, a.name));
+      h.style.gridColumn = i + 1; h.style.gridRow = 1;
+      heads.push(h); add(lanes, h);
+    });
+    paths.forEach(function (p, pi) {
+      var band = add(el('div', 'band'), el('span', 'band-n', String(pi + 1)), el('span', 'band-title', p.title),
+        p.when ? el('span', 'band-when', p.when) : null);
+      band.style.gridRow = ++row;
+      add(lanes, band);
+      row++;
+      var before = null, beforeNode = null;
+      p.steps.forEach(function (s) {
+        // a step to the right of the one before it stays on its row; anything else starts a new row
+        var right = before && s.lane > before.lane;
+        if (before && !right) row++;
+        var change = s.change || 'same';
+        // a step met in an earlier band is drawn lighter, so each band shows what it adds
+        var n = el('a', 'node ' + s.actor.cls + ' ' + change + (met[s.id] ? ' again' : ''));
+        met[s.id] = true;
+        n.href = '#s-' + s.id;
+        add(n, add(el('span', 'node-top'), el('span', 'node-id', s.id), change === 'same' ? null : el('span', 'tag ' + change, L[change] || change)),
+          el('span', 'node-title', s.title));
+        n.style.gridColumn = s.lane + 1; n.style.gridRow = row;
+        add(lanes, n);
+        if (before) links.push({ from: beforeNode, to: n, handoff: s.actor !== before.actor });
+        before = s; beforeNode = n;
+      });
+    });
+    overlay(lanes, function (g) {
+      heads.forEach(function (h) { var b = g.box(h); if (b.r > b.l) g.line(b.cx, b.b + 6, b.cx, g.H - 10, 'lifeline'); });
+      links.forEach(function (k) {
+        var a = g.box(k.from), b = g.box(k.to);
+        if (b.l >= a.r && b.t < a.b) return g.wire('M' + a.r + ' ' + a.cy + 'H' + (b.l - 1), k.handoff);
+        if (Math.abs(a.cx - b.cx) < 1) return g.wire('M' + a.cx + ' ' + a.b + 'V' + (b.t - 1), k.handoff);
+        var ym = (a.b + b.t) / 2, s = b.cx > a.cx ? 1 : -1, r = Math.min(7, (b.t - a.b) / 2);
+        g.wire('M' + a.cx + ' ' + a.b + 'V' + (ym - r) + 'Q' + a.cx + ' ' + ym + ' ' + (a.cx + s * r) + ' ' + ym +
+          'H' + (b.cx - s * r) + 'Q' + b.cx + ' ' + ym + ' ' + b.cx + ' ' + (ym + r) + 'V' + (b.t - 1), k.handoff);
+      });
+    });
+    var legend = add(el('span', 'legend'), el('span', 'tag new', L['new'] || 'New'), el('span', 'tag changed', L.changed || 'Changed'),
+      el('span', 'tag same', L.same || 'As today'));
+    var cap = add(el('figcaption'), legend, add(el('span', 'legend'), key(true), el('span', null, L.handoff || 'passes to someone else')),
+      L.flowCaption ? el('span', null, L.flowCaption) : null);
+    var fig = add(el('figure', 'map'), add(el('div', 'panel'), add(el('div', 'scroll'), lanes)), cap);
+    fig.style.setProperty('--n', actors.length);
+    return fig;
+  }
+
+  /* ---------- the life of the main object: states on a line, the long jumps as arcs ---------- */
+  function lifeFigure(st) {
+    var box = el('div', 'states'), at = {}, there = {};
+    var cells = (st.nodes || []).map(function (n, i) {
+      at[n.id] = i;
+      var c = add(el('div', 'state'), el('strong', null, n.label), n.how ? el('span', null, n.how) : null);
+      add(box, c);
+      return c;
+    });
+    var edges = (st.edges || []).map(function (e) { return { a: at[e[0]], b: at[e[1]] }; })
+      .filter(function (e) { return e.a != null && e.b != null && e.a !== e.b; });
+    var ahead = 0, back = 0;
+    edges.forEach(function (e) {
+      there[e.a + '>' + e.b] = true;
+      if (e.b - e.a > 1) ahead = Math.max(ahead, e.b - e.a);
+      if (e.a - e.b > 1) back = Math.max(back, e.a - e.b);
+    });
+    function bow(span) { return 26 + 20 * (span - 2); }
+    function room(span) { return (span ? Math.round(.75 * bow(span)) + 16 : 16) + 'px'; }
+    box.style.setProperty('--arc-a', room(ahead));
+    box.style.setProperty('--arc-b', room(back));
+    overlay(box, function (g) {
+      var down = getComputedStyle(box).flexDirection === 'column';
+      edges.forEach(function (e) {
+        var a = g.box(cells[e.a]), b = g.box(cells[e.b]), span = e.b - e.a, fwd = span > 0;
+        var both = there[e.b + '>' + e.a], h = bow(Math.abs(span)), p;
+        if (Math.abs(span) === 1) {
+          var off = both ? (fwd ? -7 : 7) : 0;
+          if (down) p = 'M' + (a.cx + off) + ' ' + (fwd ? a.b : a.t) + 'V' + (fwd ? b.t - 1 : b.b + 1);
+          else p = 'M' + (fwd ? a.r : a.l) + ' ' + (a.cy + off) + 'H' + (fwd ? b.l - 1 : b.r + 1);
+        } else if (down) {
+          var x = fwd ? a.r : a.l, sx = fwd ? 1 : -1, y1 = a.cy + sx * 8, y2 = b.cy - sx * 8;
+          p = 'M' + x + ' ' + y1 + 'C' + (x + sx * h) + ' ' + y1 + ' ' + (x + sx * h) + ' ' + y2 + ' ' + (x + sx) + ' ' + y2;
+        } else {
+          var y = fwd ? a.t : a.b, sy = fwd ? -1 : 1, x1 = a.cx - sy * 12, x2 = b.cx + sy * 12;
+          p = 'M' + x1 + ' ' + y + 'C' + x1 + ' ' + (y + sy * h) + ' ' + x2 + ' ' + (y + sy * h) + ' ' + x2 + ' ' + (y + sy);
+        }
+        g.wire(p, false);
+      });
+    });
+    return add(el('figure', 'life'), add(el('div', 'panel'), add(el('div', 'scroll'), box)));
+  }
+
+  /* ---------- the storyboard ---------- */
+  function sketch(blocks) {
+    var box = el('div', 'sketch'), body = el('div', 'sk-body');
+    blocks.forEach(function (b, i) {
+      if (b.t === 'bar') add(i ? body : box, el('div', i ? 'sk-head' : 'sk-bar', b.text));
+      else if (b.t === 'field') add(body, add(el('div', 'sk-field'), el('span', 'sk-label', b.label), el('span', 'sk-input', b.value || '')));
+      else if (b.t === 'list') add(body, list('sk-list', b.items || []));
+      else if (b.t === 'buttons') {
+        var row = el('div', 'sk-buttons');
+        (b.items || []).forEach(function (i) {
+          var main = i.charAt(0) === '*';
+          add(row, el('span', 'sk-btn' + (main ? ' primary' : ''), main ? i.slice(1) : i));
+        });
+        add(body, row);
+      }
+      else if (b.t === 'note') add(body, el('div', 'sk-note', b.text));
+      else if (b.t === 'box') add(body, el('div', 'sk-box', b.text));
+      else add(body, el('div', 'sk-text', b.text));
+    });
+    return body.firstChild ? add(box, body) : box;
+  }
+
+  var shownIn = {};
+  function frame(s, pathNo, after) {
+    var change = s.change || 'same';
+    var li = el('li', 'frame ' + s.actor.cls);
+    add(li, add(el('div', 'frame-head'), av(s.actor), el('span', 'who', s.actor.name), el('span', 'step-id', s.id)));
+    if (shownIn[s.id]) {
+      // the step was drawn in an earlier path: point back to it
+      var back = el('a', null, '↑ ' + (L.seen || 'Shown in path') + ' ' + shownIn[s.id]);
+      back.href = '#s-' + s.id;
+      li.className += ' again';
+      add(li, el('h4', null, s.title), back);
+    } else {
+      shownIn[s.id] = pathNo;
+      li.id = 's-' + s.id;
+      add(li, add(el('div', 'title-row'), el('h4', null, s.title), el('span', 'tag ' + change, L[change] || change)));
+      if (s.where) add(li, el('p', 'where', s.where));
+      var screen = s.screen && s.screen.length ? sketch(s.screen) : null;
+      var text = el('div', 'frame-text');
+      add(li, add(el('div', 'frame-body' + (screen ? ' with-screen' : '')), screen, text));
+      if (s.what) add(text, el('p', 'what', s.what));
+      if (s.today) add(text, labelled('today', L.today || 'Today', s.today));
+      if (s.branches && s.branches.length) {
+        var ul = el('ul', 'branches');
+        s.branches.forEach(function (b) {
+          var body = el('span');
+          add(body, el('strong', null, b.when), document.createTextNode(': ' + b.sees + (b.exit ? '. ' : '')));
+          if (b.exit) add(body, el('span', 'exit', '→ ' + b.exit));
+          add(ul, add(el('li'), el('span', 'chip', b.kind), body));
+        });
+        add(text, ul);
+      }
+      if (s.points && s.points.length) {
+        var pins = el('div', 'pins');
+        s.points.forEach(function (n) {
+          var a = el('a', 'pin ' + (kindOf[n] || ''), String(n));
+          a.href = '#p-' + n;
+          a.setAttribute('aria-label', (L.points || 'Still open') + ' ' + n);
+          add(pins, a);
+        });
+        add(text, pins);
+      }
+    }
+    if (after) {
+      var arrow = sv('svg', { 'class': 'next' + (after.actor !== s.actor ? ' handoff' : ''), viewBox: '0 0 30 12', 'aria-hidden': 'true' });
+      arrow.appendChild(sv('path', { d: 'M1 6H27M22 1.5L28 6L22 10.5' }));
+      li.appendChild(arrow);
+    }
+    return li;
+  }
+
+  /* ---------- what is still open ---------- */
+  var out; // the answers textarea
+  function update() {
+    if (!out) return;
+    out.value = points.map(function (p) {
+      var r = document.querySelector('input[name="p' + p.n + '"]:checked');
+      var note = document.getElementById('p' + p.n + '-note').value.trim();
+      return p.n + ': ' + (r ? r.value : '?') + (note ? ' (' + note + ')' : '');
+    }).join('\n');
+  }
+
+  function point(p) {
+    var a = el('article', 'point panel');
+    a.id = 'p-' + p.n;
+    add(a, add(el('div', 'point-head'), el('span', 'num ' + p.kind, String(p.n)), el('span', 'chip ' + p.kind, kinds[p.kind] || p.kind)));
+    add(a, el('h3', null, p.title));
+    if (p.where) add(a, el('p', 'where', p.where));
+    if (p.why) add(a, el('p', 'why', p.why));
+    var fs = add(el('fieldset', 'options'), el('legend', 'sr', p.title));
+    (p.options || []).forEach(function (o) {
+      var id = 'p' + p.n + '-opt-' + o.key;
+      var r = el('input');
+      r.type = 'radio'; r.name = 'p' + p.n; r.id = id; r.value = o.key;
+      r.checked = p.recommended === o.key;
+      r.addEventListener('change', update);
+      var body = el('span', 'option-body');
+      add(body, add(el('span'), el('strong', null, o.key + '. '), document.createTextNode(o.text)));
+      if (o.cost) add(body, add(el('span', 'cost'), el('span', 'cost-label', (L.cost || 'Cost') + ': '), document.createTextNode(o.cost)));
+      if (p.recommended === o.key) {
+        add(body, add(el('span', 'rec'), el('span', 'chip accent', L.recommended || 'Recommended'),
+          p.because ? document.createTextNode(' ' + p.because) : null));
+      }
+      var lab = el('label', 'option');
+      lab.htmlFor = id;
+      add(fs, add(lab, r, body));
+    });
+    add(a, fs);
+    var note = el('input', 'note');
+    note.type = 'text'; note.id = 'p' + p.n + '-note';
+    note.placeholder = L.note || 'Note';
+    note.setAttribute('aria-label', (L.note || 'Note') + ' ' + p.n);
+    note.addEventListener('input', update);
+    return add(a, note);
+  }
+
+  /* ---------- the page ---------- */
+  var mine = decisions.filter(function (c) { return c.by === 'me'; }).length;
+  var cast = el('ul', 'cast');
+  actors.forEach(function (a) {
+    add(cast, add(el('li', a.cls), av(a), add(el('span'), el('strong', null, a.name), a.who ? el('span', 'who', a.who) : null)));
+  });
+  var open = el('a', 'chip ' + (points.length ? 'gap' : 'ok'), (L.points || 'Still open') + ' ' + points.length);
+  if (points.length) open.href = '#open';
+  add(root, add(el('header', 'top'),
+    el('p', 'eyebrow', d.status || ''),
+    el('h1', null, d.title || ''),
+    el('p', 'value', d.value || ''),
+    actors.length ? cast : null,
+    add(el('div', 'counts'),
+      decisions.length ? count(L.decisions || 'Choices', decisions.length) : null,
+      mine ? count(who.me || 'Proposed', mine, 'accent') : null,
+      open)));
+
+  if (d.summary && d.summary.length) {
+    var words = el('ul', 'words panel');
+    d.summary.forEach(function (part) {
+      var plain = typeof part === 'string';
+      add(words, add(el('li'), plain || !part.title ? null : el('h3', null, part.title), el('p', null, plain ? part : part.text)));
+    });
+    add(root, add(section(L.summary || 'The flow in words'), words));
+  }
+  if (paths.length) add(root, add(section(L.flow || 'The flow'), mapFigure()));
+  if (d.states && (d.states.nodes || []).length) add(root, add(section(d.states.title || ''), lifeFigure(d.states)));
+
+  if (paths.length) {
+    var board = section(L.steps || 'Step by step');
+    board.className = 'board';
+    paths.forEach(function (p, pi) {
+      var strip = el('ol', 'strip' + (p.steps.length < 3 ? ' roomy' : ''));
+      p.steps.forEach(function (s, i) { add(strip, frame(s, pi + 1, p.steps[i + 1])); });
+      add(board, add(el('div', 'path'),
+        add(el('div', 'path-head'), el('span', 'band-n', String(pi + 1)), el('h3', null, p.title), p.when ? el('span', 'band-when', p.when) : null),
+        strip));
+    });
+    add(root, board);
+  }
+
+  if (points.length) {
+    var box = el('div', 'points');
+    points.forEach(function (p) { add(box, point(p)); });
+    out = el('textarea');
+    out.id = 'answers'; out.readOnly = true;
+    out.setAttribute('aria-label', L.answers || 'Your answers');
+    var btn = el('button', null, L.copy || 'Copy answers');
+    btn.type = 'button'; btn.id = 'copy-answers';
+    btn.addEventListener('click', function () {
+      function done() {
+        btn.textContent = L.copied || 'Copied';
+        setTimeout(function () { btn.textContent = L.copy || 'Copy answers'; }, 1500);
+      }
+      function select() { out.focus(); out.select(); }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(out.value).then(done, select);
+      else select();
+    });
+    var still = add(section(L.points || 'Still open'), box,
+      add(el('div', 'answers'), L.answersLead ? el('p', 'lead', L.answersLead) : null, out, btn));
+    still.id = 'open';
+    add(root, still);
+    update();
+  }
+
+  if (decisions.length) {
+    // the choices the user should check come first and open; the rest is one click away
+    var groups = el('div', 'groups'), opened = false;
+    ['me', 'you', 'before'].forEach(function (by) {
+      var some = decisions.filter(function (c) { return c.by === by; });
+      if (!some.length) return;
+      var ol = el('ol', 'decisions');
+      some.forEach(function (c) {
+        add(ol, add(el('li'), el('span', 'n', String(c.n)), add(el('span'), el('span', 'q', c.q), el('span', 'a', c.a))));
+      });
+      var det = add(el('details', 'panel'), add(el('summary'), document.createTextNode(who[by] || by),
+        el('span', 'chip ' + (by === 'me' ? 'accent' : ''), String(some.length))), ol);
+      if (!opened) det.open = opened = true;
+      add(groups, det);
+    });
+    add(root, add(section(L.decisions || 'The choices behind it'), groups));
+  }
+
+  if (coverage.length) {
+    var n = function (status) { return coverage.filter(function (c) { return c.status === status; }).length; };
+    var table = el('table');
+    add(table, add(el('thead'), add(el('tr'), el('th', null, L['case'] || 'Case'), el('th', null, L.source || 'Source'), el('th', null, L.answer || 'Answer'))));
+    var tb = el('tbody');
+    coverage.forEach(function (c) {
+      var cls = c.status === 'covered' ? 'ok' : c.status === 'open' ? 'gap' : '';
+      add(tb, add(el('tr'),
+        el('td', null, c['case']),
+        el('td', 'src', c.source || ''),
+        add(el('td', 'ans'), el('span', 'chip ' + cls, L[c.status] || c.status), el('span', null, c.ref || ''))));
+    });
+    var sum = add(el('summary'), document.createTextNode(L.coverage || 'Cases covered'),
+      count(L.covered || 'Covered', n('covered'), 'ok'),
+      count(L.unsupported || 'Not supported', n('unsupported')),
+      n('open') ? count(L.open || 'Open', n('open'), 'gap') : null);
+    add(root, add(el('details', 'panel'), sum, L.coverageLead ? el('p', 'lead', L.coverageLead) : null, add(el('div', 'scroll'), add(table, tb))));
+  }
+
+  if (d.out && d.out.length) add(root, add(section(L.out || 'Out of this flow'), list('plain', d.out)));
+})();
+</script>

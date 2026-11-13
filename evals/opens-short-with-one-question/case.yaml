@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: opens-short-with-one-question
+expected_outcome: |
+  After reading server/ and web/, the session opens with a few lines (what it read, how the flow
+  works today, roughly how many questions it will ask) and one question with a few options, one
+  of them recommended. It does not hand over the list of what it found, and changes no file.
+context:
+  scaffold_script: place-files.sh
