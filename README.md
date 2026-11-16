@@ -139,6 +139,16 @@ The scenarios are the contract for the build: after implementation, each one eit
 
 Not for bug fixes, refactors or one-field changes: nothing a person sees or can do changes, so there is no flow to decide.
 
+## Why not just plan mode, or a brainstorming skill?
+
+They answer a different question. Plan mode and brainstorming skills decide **how to build** something: files, steps, architecture. filo decides **what the feature does for each person who touches it**, before anyone asks how.
+
+- **It reads the product, not only the code to change.** Roles, states, timed jobs and past decisions become the cases it asks about, so the questions are about your system, not generic ones.
+- **It keeps every answer and checks the next one against it.** A plan is written once; filo stops the moment two choices, or a choice and the product, do not fit.
+- **It leaves something a person can read.** One page with the map, the screens and every choice, and a flow file with acceptance scenarios that the plan and the review can be held to.
+
+They work well together: decide the flow with filo, then hand the saved file to plan mode or your planning skill.
+
 ## Status
 
 Beta, version `0.1.0-beta.1`.
