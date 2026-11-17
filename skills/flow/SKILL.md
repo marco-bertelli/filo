@@ -24,6 +24,7 @@ If the user asks to skip the session, skip it: say in one line what will go unch
 ## How much session
 
 - A new feature, or an existing one the user finds unfinished or incoherent: the whole session below.
+- Too much for one session: when the reading shows more than about fifteen questions, or more than five kinds of people, the feature is several flows. Say so in the opening, propose how to split it (one flow per area or per moment, each with its own session and file), and ask which comes first. One long session wears the user out halfway and leaves a page nobody reads to the end.
 - One step changing in a flow that is already saved: read its file, ask only about that step and its neighbours, update the file. A page only if the user wants one.
 - A flow that is already decided and only needs to be seen or drawn again: that is the `page` skill. No interview.
 - Nothing a person sees or can do changes: this skill does not apply.
@@ -134,19 +135,26 @@ Draw what was decided as one short page, from `assets/flow-page.html`:
 3. Check that the block parses as JSON before showing it.
 4. Publish it with the environment's page tool if there is one (in Claude Code, the Artifact tool, following its rules). Otherwise give the user the file's full path to open.
 
-Do not restyle the page. The same look every time is what lets the user read the tenth flow as fast as the first.
+The page picks its parts from the data, so it fits the flow without you touching its code:
+
+- **At the top**, the numbers that matter (choices of yours to check, open points, new and changed steps, moments), each a link to its part.
+- **The flow**: every path as one line of steps, coloured by who does them, with a dark arrow where it passes to somebody else. No grid diagram.
+- **What changes**: one row for each step that is new or changed, or where something can go differently, grouped by surface. A changed step shows `today` and `what` side by side, so write them as a before and an after of the same thing. Steps that stay as they are get no row. For a change to a product that already works, this is the part the user reads.
+- **The life of the object** is drawn only when it branches or goes back; a straight line is already told by the paths.
+
+So write the data for the flow as it is, and let the page leave out what does not apply. Do not restyle it or add parts by hand: the look stays the same so the tenth flow reads as fast as the first, and the parts vary with the flow.
 
 It should read in a couple of minutes:
 
 - **The flow in words** (`summary`). It opens the page: the whole flow explained in five to nine short parts, 300 to 600 words in all. One part for the idea, one for each main moment or area the flow touches, one for how it ends, one for what does not change. Each part says what was decided, why (what goes wrong today, or what the choice protects), and what follows from it. Put here the smaller things you worked out yourself too: what the choice means for the other parts of the product, the consequences nobody asked about. A list of bare decisions is too little; somebody who reads only this should know how the flow works and why.
-- **The flow.** Each actor's steps, a few words each, and the `paths` that thread them. A path is one moment told from start to end: setting the thing up, the everyday use, each other way in, each way it ends. It lists step ids in the order things happen, whoever does them, so a handoff is simply the next step belonging to somebody else. The page draws its map and its storyboard from the paths: two alternatives written as one path show up as a sequence that never happens, so give each its own path. Two paths differ in their steps: a different outcome at the same steps is a branch of the step, and a path that starts like an earlier one begins at the last step they share. Sketch a screen only when it is new or changes.
+- **The flow.** Each actor's steps, a few words each, and the `paths` that thread them. A path is one moment told from start to end: setting the thing up, the everyday use, each other way in, each way it ends. It lists step ids in the order things happen, whoever does them, so a handoff is simply the next step belonging to somebody else. The page draws each path as one line: two alternatives written as one path show up as a sequence that never happens, so give each its own path. Two paths differ in their steps: a different outcome at the same steps is a branch of the step, and a path that starts like an earlier one begins at the last step they share. Sketch a screen only when it is new or changes. Write each step's `where` as the surface, then the screen ("Backoffice · Users"), naming each surface the same way every time: the page groups what changes by it.
 - **The life of the main object** (`states`), when it has more than two states: each state and how it is reached.
-- **The choices.** Every answer of the interview in one line, and the ones you made, each marked with who made it.
+- **The choices.** Every answer of the interview in one line, and the ones you made, each marked with who made it, with the steps where it shows (`steps`). The page lists each step's choices beside it, and lets the user mark each of yours fine or change it.
 - **What is still open**, if anything, with its options.
 - **The coverage table.** Every case in the inventory (each actor, state, failure, timed event, surface) with one answer: covered by a step, or not supported with what the person sees instead, or open. This is what "complete" means here: no case without an answer. "Not supported" is a fine answer; silence is not.
 - **What is out of this flow.**
 
-With the page, write only: where it is, the three or four choices of yours most worth a look, what you could not verify, and one question: is this the flow? Change the same file until it is, saying in a line or two what changed each time.
+With the page, write only: where it is, the three or four choices of yours most worth a look, what you could not verify, and one question: is this the flow? Say that they can mark your choices on the page and paste the answers back. Read pasted answers like answers in the interview: a "change it" with its note is a new question about that step, checked against everything before. Change the same file until it is, saying in a line or two what changed each time.
 
 ## 5. Save
 
@@ -187,7 +195,7 @@ A1. **<Step>** (<surface>; new | changed | same). What they see and do.
 - <State>: how it gets there. Then: <the states it can go to>.
 
 ## Choices
-1. **<Question>** <the choice>. By: <the user | proposed and accepted | decided before>. Why: <reason>. Discarded: <the others>.
+1. **<Question>** <the choice>. By: <the user | proposed and accepted | decided before>. Why: <reason>. Discarded: <the others>. Steps: <ids, when the choice shows in particular steps>.
 
 ## Coverage
 | Case | Source | Answer |

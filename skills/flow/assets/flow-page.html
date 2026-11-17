@@ -3,9 +3,10 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* A flow board. First the map: one column per person, one band per moment, so no two stories
-   ever share an arrow. Then the same moments as a storyboard, each step with the screen it shows.
-   Colour says who acts; a filled tag says the step is new, an outlined one that it changes. */
+/* A flow, to be read and approved. Overview first, details on demand: the numbers that matter,
+   then every moment as one line of steps, then the reasons in words, then what changes on each
+   surface with today and tomorrow side by side. Few boxes: rules and space carry the structure,
+   so the parts that matter stand out. Colour says who acts; filled means new, outlined changed. */
 :root {
   --bg: #f3f4f7; --surface: #ffffff; --ink: #171d27; --muted: #5a6575; --line: #dde2ea; --line-strong: #a3adbd;
   --sketch: #f1f3f7; --sketch-line: #a5afbf;
@@ -73,8 +74,23 @@ a { color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
+/* the page: a reading column, and on wide screens a rail that says where you are */
+.page { max-width: 1240px; margin: 0 auto; }
+.rail { display: none; }
+@media (min-width: 1180px) {
+  .page { display: grid; grid-template-columns: 188px minmax(0, 1fr); column-gap: 36px; padding-left: 24px; }
+  .rail { display: block; position: sticky; top: 0; align-self: start; max-height: 100vh; overflow: auto; padding: 44px 0; }
+}
+.rail ol { display: flex; flex-direction: column; border-left: 1px solid var(--line); }
+.rail a {
+  display: flex; justify-content: space-between; gap: 8px; margin-left: -1px; padding: 6px 12px;
+  border-left: 2px solid transparent; font-size: 13.5px; line-height: 1.3; color: var(--muted); text-decoration: none;
+}
+.rail a:hover { color: var(--ink); }
+.rail a.here { color: var(--ink); font-weight: 500; border-left-color: var(--accent); }
+.rail .n { font: 500 11.5px var(--mono); }
 .sheet {
-  max-width: 1200px; margin: 0 auto; padding-block: 36px 72px;
+  max-width: 1000px; padding-block: 36px 72px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: flex; flex-direction: column; gap: 52px;
@@ -109,70 +125,80 @@ a { color: var(--accent); }
 .tag.new { background: var(--c); color: var(--on-actor); }
 .tag.changed { box-shadow: inset 0 0 0 1px var(--c); color: var(--c); }
 .tag.same { box-shadow: inset 0 0 0 1px var(--line); color: var(--muted); }
-.where { font: 400 11.5px var(--mono); color: var(--muted); overflow-wrap: anywhere; }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
 .scroll { overflow-x: auto; }
-.wires { position: absolute; left: 0; top: 0; pointer-events: none; }
-.wire { fill: none; stroke: var(--line-strong); stroke-width: 1.5; }
-.wire.handoff { stroke: var(--ink); stroke-width: 1.75; }
-.head { fill: var(--line-strong); }
-.head.handoff { fill: var(--ink); }
 
 /* header */
-.top { display: flex; flex-direction: column; gap: 14px; }
-h1 { font-size: clamp(27px, 4.2vw, 38px); line-height: 1.1; font-weight: 600; letter-spacing: -.015em; text-wrap: balance; }
-.value { font-size: 18px; line-height: 1.45; max-width: 66ch; text-wrap: pretty; }
-.cast { display: flex; flex-wrap: wrap; gap: 12px 26px; margin-top: 4px; }
-.cast li { display: flex; gap: 9px; max-width: 290px; font-size: 13.5px; line-height: 1.35; }
+.top { display: flex; flex-direction: column; gap: 16px; }
+h1 { font-size: clamp(28px, 4.4vw, 42px); line-height: 1.08; font-weight: 600; letter-spacing: -.02em; text-wrap: balance; }
+.value { font-size: 18.5px; line-height: 1.45; max-width: 62ch; text-wrap: pretty; }
+.glance {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 1px; max-width: 820px; margin-top: 6px;
+  background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+}
+.glance > * { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px 13px; background: var(--surface); color: var(--ink); text-decoration: none; }
+.glance strong { font-size: 28px; line-height: 1.1; font-weight: 600; font-variant-numeric: tabular-nums; }
+.glance span { font-size: 13px; line-height: 1.3; color: var(--muted); }
+.glance a:hover { background: var(--accent-soft); }
+.glance .hot strong { color: var(--accent); }
+.glance .warn strong { color: var(--gap); }
+.cast { display: flex; flex-wrap: wrap; gap: 10px 24px; }
+.cast li { max-width: 300px; font-size: 13.5px; line-height: 1.35; }
+/* a person in the cast is a switch: it lights up their steps and dims the rest */
+.cast button {
+  display: flex; align-items: flex-start; gap: 9px; margin: -5px -9px; padding: 5px 9px; border: 1px solid transparent; border-radius: 9px;
+  font: inherit; text-align: left; color: inherit; background: none; cursor: pointer;
+}
+.cast button:hover { background: var(--cs); }
+.cast button[aria-pressed="true"] { background: var(--cs); border-color: var(--c); }
+.cast-hint { font-size: 12.5px; color: var(--muted); }
+[data-focus] .pill, [data-focus] .change { opacity: .28; transition: opacity .15s; }
+[data-focus="act-1"] .act-1, [data-focus="act-2"] .act-2, [data-focus="act-3"] .act-3,
+[data-focus="act-4"] .act-4, [data-focus="act-5"] .act-5, [data-focus="act-6"] .act-6 { opacity: 1; }
 .cast strong { display: block; font-weight: 600; }
 .cast .who { color: var(--muted); }
-.counts { display: flex; flex-wrap: wrap; gap: 6px 8px; }
-.counts a { text-decoration: none; }
 
-section, figure { display: flex; flex-direction: column; gap: 16px; }
-h2 { font-size: 21px; line-height: 1.2; font-weight: 600; text-wrap: balance; }
+section, figure { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 20px; }
+h2 { font-size: 22px; line-height: 1.2; font-weight: 600; letter-spacing: -.01em; text-wrap: balance; }
 h3 { font-size: 17px; line-height: 1.25; font-weight: 600; text-wrap: balance; }
 .lead { color: var(--muted); max-width: 72ch; }
 figcaption { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 13px; color: var(--muted); }
 .legend { --c: var(--muted); display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
-.key { width: 34px; height: 10px; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-/* the whole flow in words, reasons included */
-.words { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr)); gap: 0 44px; padding: 4px 20px 8px; }
-.words li { display: flex; flex-direction: column; gap: 5px; padding: 16px 0; border-bottom: 1px solid var(--line); break-inside: avoid; }
-.words h3 { font-size: 15.5px; }
-.words p { font-size: 15px; line-height: 1.55; text-wrap: pretty; }
+/* the whole flow in words: one column, set for reading */
+.words { display: flex; flex-direction: column; gap: 20px; max-width: 68ch; }
+.words h3 { font-size: 16px; margin-bottom: 3px; }
+.words p { font-size: 16px; line-height: 1.65; text-wrap: pretty; }
 
-/* the map */
-.map .panel { max-width: calc(var(--n) * 250px + 36px); }
-.lanes {
-  --col: 128px;
-  position: relative; display: grid; grid-template-columns: repeat(var(--n), minmax(var(--col), 1fr));
-  column-gap: 22px; row-gap: 20px; padding: 16px 18px 22px;
+/* the moments: each one a line of steps, in the order things happen */
+.journeys { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.journey {
+  display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: 8px 28px; align-items: start;
+  padding: 14px 0; border-bottom: 1px solid var(--line);
 }
-.lane-head, .band, .node { position: relative; z-index: 1; }
-.lane-head { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 600; line-height: 1.25; }
-.band {
-  grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px;
-  margin-inline: -18px; padding: 12px 18px 0; border-top: 1px solid var(--line); background: var(--surface);
+.j-head { display: flex; gap: 10px; align-items: baseline; }
+.j-n { font: 500 12px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.j-title { font-size: 15px; font-weight: 600; line-height: 1.3; }
+.j-when { display: block; margin-top: 2px; font-size: 13px; font-weight: 400; color: var(--muted); }
+.chain { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 0; }
+.link { display: inline-flex; align-items: center; max-width: 100%; }
+.pill {
+  display: inline-flex; align-items: center; gap: 7px; max-width: 100%; padding: 3px 11px 3px 3px; border-radius: 999px;
+  font-size: 13.5px; line-height: 1.3; color: var(--ink); text-decoration: none;
+  background: var(--cs); border: 1px solid color-mix(in srgb, var(--c) 40%, transparent);
 }
-.band-n { font: 500 12px var(--mono); color: var(--muted); }
-.band-title { font-size: 14px; font-weight: 600; }
-.band-when { font-size: 13px; color: var(--muted); }
-.node {
-  justify-self: center; width: 100%; max-width: 230px; display: flex; flex-direction: column; gap: 3px;
-  padding: 7px 10px 8px; border-radius: 7px; text-decoration: none; color: var(--ink);
-  background: var(--cs); border: 1px solid color-mix(in srgb, var(--c) 42%, var(--surface)); border-left: 3px solid var(--c);
-}
-.node.same { background: var(--surface); border-color: var(--line-strong); border-left-color: var(--c); }
-.node.again { background: transparent; border-style: dashed; border-left-style: solid; }
-.node:hover { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 28%, transparent); }
-.node-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 17px; }
-.node-id { font: 500 11px var(--mono); color: var(--c); }
-.node-title { font-size: 13px; font-weight: 600; line-height: 1.25; }
-.lifeline { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 5; }
+.pill.changed { background: var(--surface); border-color: var(--c); }
+.pill.same { background: transparent; border-color: var(--line-strong); color: var(--muted); }
+a.pill:hover { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 25%, transparent); }
+.pill .av { width: 20px; height: 20px; font-size: 10px; }
+.to { width: 26px; height: 10px; flex: none; margin: 0 3px; fill: none; stroke: var(--line-strong); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.to.handoff { stroke: var(--ink); stroke-width: 2; }
+.legend .pill { padding: 1px 9px; font-size: 12px; }
 
 /* the life of the main object */
+.wires { position: absolute; left: 0; top: 0; pointer-events: none; }
+.wire { fill: none; stroke: var(--line-strong); stroke-width: 1.5; }
+.head { fill: var(--line-strong); }
 .states {
   position: relative; display: flex; gap: 44px; min-width: min-content;
   padding: var(--arc-a, 16px) 20px var(--arc-b, 16px);
@@ -185,42 +211,32 @@ figcaption { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
 .state strong { font-size: 14px; font-weight: 600; line-height: 1.25; }
 .state span { font-size: 12.5px; line-height: 1.35; color: var(--muted); }
 
-/* the storyboard */
-.board { gap: 28px; }
-.path { display: flex; flex-direction: column; gap: 14px; }
-.path + .path { padding-top: 26px; border-top: 1px solid var(--line); }
-.path-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
-.strip { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 18px 36px; padding-right: 36px; }
-.frame {
-  position: relative; flex: 1 1 236px; max-width: 560px; min-width: 0; display: flex; flex-direction: column; gap: 9px;
-  padding: 11px 13px 14px; background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--c);
-  border-radius: 8px; scroll-margin-top: 16px;
+/* what changes, surface by surface: today and tomorrow side by side */
+.changes { gap: 36px; }
+.group { display: flex; flex-direction: column; }
+.group-head { display: flex; align-items: baseline; gap: 10px; padding-bottom: 8px; border-bottom: 2px solid var(--ink); }
+.group-head h3 { font: 600 12.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.group-head .n { font: 500 12px var(--mono); color: var(--muted); }
+.change {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px 36px; align-items: start;
+  padding: 20px 0 22px; border-bottom: 1px solid var(--line); scroll-margin-top: 20px;
 }
-.frame:target { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 32%, transparent); }
-.frame-head { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
-.frame-head .who { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.step-id { font: 500 12px var(--mono); color: var(--c); }
-.title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-.title-row .tag { margin-top: 3px; }
-h4 { font-size: 15.5px; line-height: 1.3; font-weight: 600; text-wrap: balance; }
-.frame-body, .frame-text { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
-@media (min-width: 900px) {
-  /* a short path has room: the screen sits beside its caption */
-  .roomy .frame-body.with-screen { display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 10fr); gap: 16px; align-items: start; }
-}
-.what, .today { font-size: 13.5px; line-height: 1.45; }
-.today { color: var(--muted); }
-.today strong { font-weight: 600; }
-.frame.again { flex: 0 1 210px; background: transparent; border-style: dashed; border-top-style: solid; }
-.again a { font-size: 13px; }
-.next {
-  position: absolute; right: -34px; top: 22px; width: 30px; height: 12px;
-  fill: none; stroke: var(--line-strong); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
-}
-.next.handoff, .key.handoff { stroke: var(--ink); stroke-width: 1.75; }
-.branches { display: flex; flex-direction: column; gap: 8px; }
-.what ~ .branches, .today ~ .branches { border-top: 1px solid var(--line); padding-top: 10px; }
-.branches li { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; font-size: 13px; line-height: 1.4; }
+.change:target { box-shadow: -14px 0 0 -11px var(--c); }
+@media (min-width: 900px) { .change.wide { grid-template-columns: minmax(0, 1fr) minmax(0, 330px); } }
+.c-text { display: flex; flex-direction: column; gap: 10px; min-width: 0; max-width: 70ch; }
+.c-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.c-head h4 { font-size: 17px; line-height: 1.3; font-weight: 600; text-wrap: balance; }
+.c-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 13px; color: var(--muted); }
+.c-meta .step-id { font: 500 12px var(--mono); color: var(--c); }
+.what { font-size: 15px; line-height: 1.5; }
+.delta { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 8px; }
+.delta > div { padding: 10px 13px 11px; border-radius: 8px; font-size: 14.5px; line-height: 1.45; }
+.delta b { display: block; margin-bottom: 3px; font: 500 11px var(--mono); letter-spacing: .07em; text-transform: uppercase; }
+.delta .was { background: var(--sketch); color: var(--muted); }
+.delta .now { background: var(--cs); box-shadow: inset 3px 0 0 var(--c); }
+.delta .now b { color: var(--c); }
+.branches { display: flex; flex-direction: column; gap: 7px; }
+.branches li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: baseline; font-size: 13.5px; line-height: 1.45; }
 .branches strong { font-weight: 600; }
 .exit { color: var(--muted); }
 .pins { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -280,6 +296,27 @@ details > .lead { margin-bottom: 12px; }
 .decisions .n { font: 500 12px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
 .decisions .q { display: block; font-size: 13px; color: var(--muted); }
 .decisions .a { display: block; font-size: 14.5px; font-weight: 500; }
+.decisions li { scroll-margin-top: 20px; }
+.decisions li:target { background: var(--accent-soft); box-shadow: -8px 0 0 var(--accent-soft), 8px 0 0 var(--accent-soft); }
+.decisions .body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.in-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 12.5px; color: var(--muted); }
+.in-steps a, .in-steps span.id { font: 500 12px var(--mono); text-decoration: none; }
+/* my choices: the user says fine or change it, right where they read them */
+.verdict { display: flex; flex-wrap: wrap; gap: 6px; }
+.v {
+  display: inline-flex; align-items: center; gap: 6px; padding: 2px 11px 2px 8px; border: 1px solid var(--line); border-radius: 999px;
+  font-size: 13px; color: var(--muted); cursor: pointer;
+}
+.v input { margin: 0; }
+.v.ok input { accent-color: var(--ok); }
+.v.no input { accent-color: var(--gap); }
+.v.ok:has(input:checked) { border-color: var(--ok); background: var(--ok-soft); color: var(--ok); }
+.v.no:has(input:checked) { border-color: var(--gap); background: var(--gap-soft); color: var(--gap); }
+.decisions .note { display: none; }
+.decisions li:has(.no input:checked) .note, .decisions .note.filled { display: block; }
+.decisions li:has(.no input:checked) { border-top-color: var(--gap); }
+.c-choices { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 13px; color: var(--muted); }
+.pin.me { background: var(--accent-soft); color: var(--accent); }
 table { border-collapse: collapse; width: 100%; font-size: 14px; margin-bottom: 12px; }
 th { text-align: left; font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 0 14px 8px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
 td { padding: 9px 14px 9px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -292,26 +329,22 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
 
 @media (max-width: 640px) {
   .sheet { gap: 40px; }
-  .lanes { display: flex; flex-wrap: wrap; gap: 20px 24px; padding: 14px 12px 18px; }
-  .lane-head { display: none; }
-  .band { flex: 0 0 calc(100% + 24px); margin-inline: -12px; padding-inline: 12px; }
-  .lane-head + .band { border-top: 0; padding-top: 0; }
-  .node { flex: 0 1 auto; width: auto; min-width: 112px; max-width: min(100%, 210px); }
+  .journey { grid-template-columns: minmax(0, 1fr); }
   .states { flex-direction: column; gap: 30px; padding: 16px var(--arc-a, 16px) 16px var(--arc-b, 16px); }
   .state { flex: none; max-width: none; }
-  .strip { flex-direction: column; align-items: stretch; gap: 34px; padding-right: 0; }
-  .frame, .frame.again { flex: none; max-width: none; }
-  .next { right: auto; left: 20px; top: auto; bottom: -23px; transform: rotate(90deg); }
 }
-@media (prefers-reduced-motion: reduce) { summary::before { transition: none; } }
+@media (prefers-reduced-motion: reduce) { summary::before, [data-focus] .pill, [data-focus] .change { transition: none; } }
 </style>
 
-<main class="sheet" id="flow"></main>
+<div class="page"><nav class="rail" id="rail"></nav><main class="sheet" id="flow"></main></div>
 
 <!--
   HOW TO FILL THIS PAGE
   Replace the <title> above and the whole JSON below. Nothing else changes: the page draws the
-  diagrams itself from this data. Keep it valid JSON, and never write "</script" inside it.
+  diagrams itself from this data, and picks its parts from it too. Each path is one line of steps
+  under "The flow". Each step that changes gets a row under "What changes", grouped by surface, with
+  "today" and "what" side by side. The life of the object is drawn only when it is not a straight
+  line. Keep it valid JSON, and never write "</script" inside it.
 
   title       the flow's name, same as the <title>
   status      where the work stands, for example "Draft 2 · 13 Nov 2026"
@@ -324,9 +357,12 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
               yourself included. 300 to 600 words in all. Somebody who reads only this knows
               how the flow works and why. Plain words: no step ids, no code names.
   labels      the page's fixed words: translate every one into the user's language
-  actors[]    name (two or three words: it heads a column of the map), who (one line), steps[]
+  actors[]    name (two or three words), who (one line), steps[]
     step      id: one letter per actor and a number (A1, A2 ... B1 ...); the letter is the actor's badge,
-              title (a few words, starting with what the actor does), where (the surface or screen),
+              title (a few words, starting with what the actor does),
+              where: the surface, then " · ", then the screen ("Backoffice · Users", "Email").
+                The part before the first " · " groups the cards, so name each surface the same
+                way every time,
               change: "new" | "changed" | "same" compared with today,
               screen: the sketch, only for a screen that is new or changes. A list of blocks:
                 { "t": "bar",     "text": "..." }                  the screen's title bar (put it first)
@@ -337,9 +373,12 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
                 { "t": "note",    "text": "..." }                  a message from the system
                 { "t": "box",     "text": "..." }                  a placeholder (image, chart, preview)
               what: one sentence on what the person sees and does,
-              today: what happens here today (only when change is "changed"),
+              today: what happens here today (only when change is "changed"); the page sets it
+                beside "what", so write the two as a before and an after of the same thing,
               branches[]: kind (one or two words in the user's language: empty, error, not allowed,
                           waiting ...), when, sees, exit (the way out),
+              A step that is "same", with no screen, no branches and no points, gets no card: it
+              shows only in its moments, as the context of what changes,
               points: numbers of the open points that bite on this step
   paths[]     the flow in the order things happen. One path per moment: setting it up, the everyday
               use, each other way in, each way it ends. A path is one story told start to end.
@@ -351,12 +390,17 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
               declined) is a branch of the step, not another path. A path that starts like an
               earlier one begins at the last step they share, not from the top again.
               Every step is in at least one path. Order them as a story: setting up, the everyday use,
-              the rarer ways in, then how it ends.
-  states      optional: the life of the main object, when it has more than two states.
+              the rarer ways in, then how it ends. Do not split a moment to make paths short, nor
+              join two: each path is one line on the page, as long as the moment is.
+  states      optional: the life of the main object, when it has more than two states. Drawn only
+              when some edge skips ahead or goes back.
               title, nodes[] in the order of a normal life: id, label, how (how it gets there),
               edges: [from, to] pairs
   decisions[] every choice that made this flow: n, q (the question, short), a (the choice),
-              by: "you" (the user answered) | "me" (you chose, they can object) | "before" (already decided)
+              by: "you" (the user answered) | "me" (you chose, they can object) | "before" (already decided),
+              steps: the ids of the steps where the choice shows, so each step lists its choices
+                and each choice links to its steps; leave it out for a choice about the whole flow.
+              The user marks each "me" choice fine or change it on the page, and pastes the result.
   points[]    only what is still open: n, kind: "gap" | "inconsistency" | "unclear", title,
               where, why (what happens to the person), options[]: key, text, cost,
               recommended (an option key), because
@@ -371,11 +415,13 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
   "status": "Draft 1 · example",
   "value": "A member who booked a room can put the booking in a colleague's list, so the colleague stops asking where and when.",
   "labels": {
-    "new": "New", "changed": "Changed", "same": "As today", "today": "Today",
+    "new": "New", "changed": "Changed", "same": "As today", "today": "Today", "now": "With this flow",
+    "stepsNew": "New steps", "stepsChanged": "Changed steps", "moments": "Moments", "toCheck": "Choices of mine to check",
+    "contents": "On this page",
     "summary": "The flow in words",
-    "flow": "The flow", "flowCaption": "One column per person, one band per moment. Each band reads from its first step.",
+    "changes": "What changes",
+    "flow": "The flow", "flowCaption": "One line per moment, in the order things happen.",
     "handoff": "passes to someone else",
-    "steps": "Step by step", "seen": "Shown in path",
     "decisions": "The choices behind it", "by": { "you": "You", "me": "Proposed", "before": "Already decided" },
     "points": "Still open", "recommended": "Recommended", "cost": "Cost", "note": "Note",
     "kinds": { "gap": "Gap", "inconsistency": "Inconsistency", "unclear": "Unclear" },
@@ -383,7 +429,9 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
     "case": "Case", "source": "Source", "answer": "Answer",
     "covered": "Covered", "unsupported": "Not supported", "open": "Open",
     "out": "Out of this flow",
-    "answers": "Your answers", "answersLead": "Pick an option on each open point, add a note where you want, then paste this into the chat.",
+    "answers": "Your answers", "answersLead": "Pick an option on each open point, say fine or change it on each of my choices, then paste this into the chat.",
+    "point": "Point", "choice": "Choice", "fine": "fine", "change": "change it", "changeHow": "What should it be?",
+    "choicesHere": "Choices here", "inSteps": "In", "focus": "Pick a person to see only their steps.",
     "copy": "Copy answers", "copied": "Copied"
   },
   "summary": [
@@ -476,9 +524,9 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
   },
   "decisions": [
     { "n": 1, "q": "What is sharing for?", "a": "So a colleague knows where and when. Not for managing the booking together.", "by": "you" },
-    { "n": 2, "q": "What can the colleague do with a shared booking?", "a": "Only look.", "by": "you" },
-    { "n": 3, "q": "Which bookings can be shared?", "a": "Submitted ones. A draft holds nothing yet.", "by": "me" },
-    { "n": 4, "q": "How does the colleague hear about it?", "a": "The notice the product already sends for a confirmation.", "by": "me" },
+    { "n": 2, "q": "What can the colleague do with a shared booking?", "a": "Only look.", "by": "you", "steps": ["B2"] },
+    { "n": 3, "q": "Which bookings can be shared?", "a": "Submitted ones. A draft holds nothing yet.", "by": "me", "steps": ["A2"] },
+    { "n": 4, "q": "How does the colleague hear about it?", "a": "The notice the product already sends for a confirmation.", "by": "me", "steps": ["B1"] },
     { "n": 5, "q": "Do guests take part?", "a": "No: guests have no bookings page.", "by": "before" }
   ],
   "points": [
@@ -538,9 +586,6 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
     for (var i = 1; i < arguments.length; i++) if (arguments[i]) parent.appendChild(arguments[i]);
     return parent;
   }
-  function labelled(cls, label, text) {
-    return add(el('p', cls), el('strong', null, label + ': '), document.createTextNode(text));
-  }
   function list(cls, items) {
     var ul = el('ul', cls);
     items.forEach(function (i) { add(ul, el('li', null, i)); });
@@ -555,7 +600,7 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
     var first = (a.steps || [])[0];
     a.cls = 'act-' + (i % 6 + 1);
     a.badge = ((first && /^[^\d\s]+/.exec(first.id)) || [String(a.name || '?').charAt(0)])[0].slice(0, 2).toUpperCase();
-    (a.steps || []).forEach(function (s) { s.actor = a; s.lane = i; stepOf[s.id] = s; });
+    (a.steps || []).forEach(function (s) { s.actor = a; stepOf[s.id] = s; });
   });
   function av(a) { var n = el('span', 'av', a.badge); n.setAttribute('aria-hidden', 'true'); return n; }
 
@@ -565,17 +610,20 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
     steps.forEach(function (s) { inPath[s.id] = true; });
     if (steps.length) paths.push({ title: p.title, when: p.when, steps: steps });
   });
-  // a step no path names still gets drawn: one path per actor, cut where a step is marked "apart"
+  // a step no path names still gets listed: one path per actor with what is left
   actors.forEach(function (a) {
-    var run = [];
-    function flush() { if (run.length) paths.push({ title: a.name, steps: run }); run = []; }
-    (a.steps || []).forEach(function (s) {
-      if (inPath[s.id]) return;
-      if (s.apart) flush();
-      run.push(s);
-    });
-    flush();
+    var rest = (a.steps || []).filter(function (s) { return !inPath[s.id]; });
+    if (rest.length) paths.push({ title: a.name, steps: rest });
   });
+  // a step gets a row under "what changes" when it changes something, or when something can go differently there
+  function carded(s) {
+    return (s.change || 'same') !== 'same' || (s.branches || []).length || (s.points || []).length || (s.screen || []).length;
+  }
+  function stepLink(s, cls, text) {
+    var a = el(carded(s) ? 'a' : 'span', cls, text);
+    if (carded(s)) a.href = '#s-' + s.id;
+    return a;
+  }
 
   /* ---------- drawing over laid-out boxes ----------
      The boxes are ordinary HTML, so text wraps and nothing is ever cut. The lines are an SVG laid
@@ -619,64 +667,6 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(later);
     later();
   }
-  function key(handoff) {
-    var s = sv('svg', { 'class': 'key' + (handoff ? ' handoff' : ''), viewBox: '0 0 34 10', 'aria-hidden': 'true' });
-    s.appendChild(sv('path', { d: 'M1 5H31M26 1.5L32 5L26 8.5', stroke: 'currentColor' }));
-    return s;
-  }
-
-  /* ---------- the map: one column per actor, one band per path ---------- */
-  function mapFigure() {
-    var lanes = el('div', 'lanes'), heads = [], links = [], row = 1, met = {};
-    actors.forEach(function (a, i) {
-      var h = add(el('div', 'lane-head ' + a.cls), av(a), el('span', null, a.name));
-      h.style.gridColumn = i + 1; h.style.gridRow = 1;
-      heads.push(h); add(lanes, h);
-    });
-    paths.forEach(function (p, pi) {
-      var band = add(el('div', 'band'), el('span', 'band-n', String(pi + 1)), el('span', 'band-title', p.title),
-        p.when ? el('span', 'band-when', p.when) : null);
-      band.style.gridRow = ++row;
-      add(lanes, band);
-      row++;
-      var before = null, beforeNode = null;
-      p.steps.forEach(function (s) {
-        // a step to the right of the one before it stays on its row; anything else starts a new row
-        var right = before && s.lane > before.lane;
-        if (before && !right) row++;
-        var change = s.change || 'same';
-        // a step met in an earlier band is drawn lighter, so each band shows what it adds
-        var n = el('a', 'node ' + s.actor.cls + ' ' + change + (met[s.id] ? ' again' : ''));
-        met[s.id] = true;
-        n.href = '#s-' + s.id;
-        add(n, add(el('span', 'node-top'), el('span', 'node-id', s.id), change === 'same' ? null : el('span', 'tag ' + change, L[change] || change)),
-          el('span', 'node-title', s.title));
-        n.style.gridColumn = s.lane + 1; n.style.gridRow = row;
-        add(lanes, n);
-        if (before) links.push({ from: beforeNode, to: n, handoff: s.actor !== before.actor });
-        before = s; beforeNode = n;
-      });
-    });
-    overlay(lanes, function (g) {
-      heads.forEach(function (h) { var b = g.box(h); if (b.r > b.l) g.line(b.cx, b.b + 6, b.cx, g.H - 10, 'lifeline'); });
-      links.forEach(function (k) {
-        var a = g.box(k.from), b = g.box(k.to);
-        if (b.l >= a.r && b.t < a.b) return g.wire('M' + a.r + ' ' + a.cy + 'H' + (b.l - 1), k.handoff);
-        if (Math.abs(a.cx - b.cx) < 1) return g.wire('M' + a.cx + ' ' + a.b + 'V' + (b.t - 1), k.handoff);
-        var ym = (a.b + b.t) / 2, s = b.cx > a.cx ? 1 : -1, r = Math.min(7, (b.t - a.b) / 2);
-        g.wire('M' + a.cx + ' ' + a.b + 'V' + (ym - r) + 'Q' + a.cx + ' ' + ym + ' ' + (a.cx + s * r) + ' ' + ym +
-          'H' + (b.cx - s * r) + 'Q' + b.cx + ' ' + ym + ' ' + b.cx + ' ' + (ym + r) + 'V' + (b.t - 1), k.handoff);
-      });
-    });
-    var legend = add(el('span', 'legend'), el('span', 'tag new', L['new'] || 'New'), el('span', 'tag changed', L.changed || 'Changed'),
-      el('span', 'tag same', L.same || 'As today'));
-    var cap = add(el('figcaption'), legend, add(el('span', 'legend'), key(true), el('span', null, L.handoff || 'passes to someone else')),
-      L.flowCaption ? el('span', null, L.flowCaption) : null);
-    var fig = add(el('figure', 'map'), add(el('div', 'panel'), add(el('div', 'scroll'), lanes)), cap);
-    fig.style.setProperty('--n', actors.length);
-    return fig;
-  }
-
   /* ---------- the life of the main object: states on a line, the long jumps as arcs ---------- */
   function lifeFigure(st) {
     var box = el('div', 'states'), at = {}, there = {};
@@ -720,7 +710,7 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
     return add(el('figure', 'life'), add(el('div', 'panel'), add(el('div', 'scroll'), box)));
   }
 
-  /* ---------- the storyboard ---------- */
+  /* ---------- the sketch of a screen ---------- */
   function sketch(blocks) {
     var box = el('div', 'sketch'), body = el('div', 'sk-body');
     blocks.forEach(function (b, i) {
@@ -742,65 +732,166 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
     return body.firstChild ? add(box, body) : box;
   }
 
-  var shownIn = {};
-  function frame(s, pathNo, after) {
+  /* ---------- the moments: each path as one line of steps ---------- */
+  function arrow(handoff, title) {
+    var s = sv('svg', { 'class': 'to' + (handoff ? ' handoff' : ''), viewBox: '0 0 26 10', role: 'img', 'aria-label': title });
+    s.appendChild(sv('path', { d: 'M1 5H23M19 1.5L24 5L19 8.5' }));
+    return s;
+  }
+  function pill(s) {
     var change = s.change || 'same';
-    var li = el('li', 'frame ' + s.actor.cls);
-    add(li, add(el('div', 'frame-head'), av(s.actor), el('span', 'who', s.actor.name), el('span', 'step-id', s.id)));
-    if (shownIn[s.id]) {
-      // the step was drawn in an earlier path: point back to it
-      var back = el('a', null, '↑ ' + (L.seen || 'Shown in path') + ' ' + shownIn[s.id]);
-      back.href = '#s-' + s.id;
-      li.className += ' again';
-      add(li, el('h4', null, s.title), back);
-    } else {
-      shownIn[s.id] = pathNo;
-      li.id = 's-' + s.id;
-      add(li, add(el('div', 'title-row'), el('h4', null, s.title), el('span', 'tag ' + change, L[change] || change)));
-      if (s.where) add(li, el('p', 'where', s.where));
-      var screen = s.screen && s.screen.length ? sketch(s.screen) : null;
-      var text = el('div', 'frame-text');
-      add(li, add(el('div', 'frame-body' + (screen ? ' with-screen' : '')), screen, text));
-      if (s.what) add(text, el('p', 'what', s.what));
-      if (s.today) add(text, labelled('today', L.today || 'Today', s.today));
-      if (s.branches && s.branches.length) {
-        var ul = el('ul', 'branches');
-        s.branches.forEach(function (b) {
-          var body = el('span');
-          add(body, el('strong', null, b.when), document.createTextNode(': ' + b.sees + (b.exit ? '. ' : '')));
-          if (b.exit) add(body, el('span', 'exit', '→ ' + b.exit));
-          add(ul, add(el('li'), el('span', 'chip', b.kind), body));
-        });
-        add(text, ul);
-      }
-      if (s.points && s.points.length) {
-        var pins = el('div', 'pins');
-        s.points.forEach(function (n) {
-          var a = el('a', 'pin ' + (kindOf[n] || ''), String(n));
-          a.href = '#p-' + n;
-          a.setAttribute('aria-label', (L.points || 'Still open') + ' ' + n);
-          add(pins, a);
-        });
-        add(text, pins);
-      }
+    var p = stepLink(s, 'pill ' + s.actor.cls + ' ' + change);
+    p.title = s.actor.name + ' · ' + (L[change] || change);
+    return add(p, av(s.actor), el('span', null, s.title));
+  }
+  function journeys() {
+    var ol = el('ol', 'journeys');
+    paths.forEach(function (p, pi) {
+      var chain = el('div', 'chain');
+      p.steps.forEach(function (s, i) {
+        // the arrow travels with the step it points to, so a wrapped line never ends on an arrow
+        var prev = p.steps[i - 1], hand = prev && prev.actor !== s.actor;
+        add(chain, add(el('span', 'link'), prev ? arrow(hand, hand ? (L.handoff || 'passes to someone else') : '→') : null, pill(s)));
+      });
+      add(ol, add(el('li', 'journey'),
+        add(el('div', 'j-head'), el('span', 'j-n', String(pi + 1)),
+          add(el('span', 'j-title', p.title), p.when ? el('span', 'j-when', p.when) : null)),
+        chain));
+    });
+    var legend = add(el('span', 'legend'),
+      el('span', 'pill new', L['new'] || 'New'), el('span', 'pill changed', L.changed || 'Changed'), el('span', 'pill same', L.same || 'As today'));
+    var hand = add(el('span', 'legend'), arrow(true, ''), el('span', null, L.handoff || 'passes to someone else'));
+    return add(el('figure'), ol, add(el('figcaption'), legend, hand, L.flowCaption ? el('span', null, L.flowCaption) : null));
+  }
+
+  /* ---------- what changes: one row per step, today and tomorrow side by side ---------- */
+  function row(s, surface) {
+    var change = s.change || 'same';
+    var screen = s.screen && s.screen.length ? sketch(s.screen) : null;
+    var art = el('article', 'change ' + s.actor.cls + (screen ? ' wide' : ''));
+    art.id = 's-' + s.id;
+    var place = String(s.where || '').split(' · ').slice(1).join(' · ');
+    var text = add(el('div', 'c-text'),
+      add(el('div', 'c-head'), el('h4', null, s.title), el('span', 'tag ' + change, L[change] || change)),
+      add(el('div', 'c-meta'), av(s.actor), el('span', null, s.actor.name), place ? el('span', null, '· ' + place) : null, el('span', 'step-id', s.id)));
+    if (s.today) {
+      add(text, add(el('div', 'delta'),
+        add(el('div', 'was'), el('b', null, L.today || 'Today'), document.createTextNode(s.today)),
+        add(el('div', 'now'), el('b', null, L.now || 'With this flow'), document.createTextNode(s.what || ''))));
+    } else if (s.what) add(text, el('p', 'what', s.what));
+    if (s.branches && s.branches.length) {
+      var ul = el('ul', 'branches');
+      s.branches.forEach(function (b) {
+        var body = el('span');
+        add(body, el('strong', null, b.when), document.createTextNode(': ' + b.sees + (b.exit ? '. ' : '')));
+        if (b.exit) add(body, el('span', 'exit', '→ ' + b.exit));
+        add(ul, add(el('li'), el('span', 'chip', b.kind), body));
+      });
+      add(text, ul);
     }
-    if (after) {
-      var arrow = sv('svg', { 'class': 'next' + (after.actor !== s.actor ? ' handoff' : ''), viewBox: '0 0 30 12', 'aria-hidden': 'true' });
-      arrow.appendChild(sv('path', { d: 'M1 6H27M22 1.5L28 6L22 10.5' }));
-      li.appendChild(arrow);
+    var here = decisions.filter(function (c) { return (c.steps || []).indexOf(s.id) >= 0; });
+    if (here.length) {
+      var cc = add(el('div', 'c-choices'), el('span', null, L.choicesHere || 'Choices here'));
+      here.forEach(function (c) {
+        var a = el('a', 'pin ' + (c.by === 'me' ? 'me' : ''), String(c.n));
+        a.href = '#c-' + c.n; a.title = c.q;
+        add(cc, a);
+      });
+      add(text, cc);
     }
-    return li;
+    if (s.points && s.points.length) {
+      var pins = el('div', 'pins');
+      s.points.forEach(function (n) {
+        var a = el('a', 'pin ' + (kindOf[n] || ''), String(n));
+        a.href = '#p-' + n;
+        a.setAttribute('aria-label', (L.points || 'Still open') + ' ' + n);
+        add(pins, a);
+      });
+      add(text, pins);
+    }
+    return add(art, text, screen);
+  }
+
+  // the surface is what "where" says before its first " · ": Backoffice · Users -> Backoffice
+  function changesSection() {
+    var groups = [], byName = {};
+    actors.forEach(function (a) {
+      (a.steps || []).filter(carded).forEach(function (s) {
+        var name = String(s.where || '').split(' · ')[0].trim() || '—';
+        if (!byName[name]) groups.push(byName[name] = { name: name, steps: [] });
+        byName[name].steps.push(s);
+      });
+    });
+    if (!groups.length) return null;
+    var sec = section(L.changes || 'What changes');
+    sec.className = 'changes';
+    groups.forEach(function (g) {
+      var box = add(el('div', 'group'), add(el('div', 'group-head'), el('h3', null, g.name), el('span', 'n', String(g.steps.length))));
+      g.steps.forEach(function (s) { add(box, row(s)); });
+      add(sec, box);
+    });
+    return sec;
   }
 
   /* ---------- what is still open ---------- */
-  var out; // the answers textarea
+  var out, toCheck; // the answers textarea, and the number at the top that counts what is left to check
+  function picked(name, id) {
+    var r = document.querySelector('input[name="' + name + '"]:checked');
+    var note = document.getElementById(id).value.trim();
+    return { v: r ? r.value : null, note: note };
+  }
   function update() {
     if (!out) return;
-    out.value = points.map(function (p) {
-      var r = document.querySelector('input[name="p' + p.n + '"]:checked');
-      var note = document.getElementById('p' + p.n + '-note').value.trim();
-      return p.n + ': ' + (r ? r.value : '?') + (note ? ' (' + note + ')' : '');
-    }).join('\n');
+    var lines = points.map(function (p) {
+      var x = picked('p' + p.n, 'p' + p.n + '-note');
+      return (L.point || 'Point') + ' ' + p.n + ': ' + (x.v || '?') + (x.note ? ' (' + x.note + ')' : '');
+    });
+    var left = 0;
+    decisions.forEach(function (c) {
+      if (c.by !== 'me') return;
+      var x = picked('c' + c.n, 'c' + c.n + '-note');
+      if (!x.v) left++;
+      var word = x.v === 'ok' ? (L.fine || 'fine') : x.v === 'no' ? (L.change || 'change it') : '?';
+      lines.push((L.choice || 'Choice') + ' ' + c.n + ': ' + word + (x.note ? ' (' + x.note + ')' : ''));
+      document.getElementById('c' + c.n + '-note').classList.toggle('filled', !!x.note);
+    });
+    if (toCheck) toCheck.textContent = String(left);
+    out.value = lines.join('\n');
+  }
+  function answersBox() {
+    out = el('textarea');
+    out.id = 'answers'; out.readOnly = true;
+    out.setAttribute('aria-label', L.answers || 'Your answers');
+    var btn = el('button', null, L.copy || 'Copy answers');
+    btn.type = 'button'; btn.id = 'copy-answers';
+    btn.addEventListener('click', function () {
+      function done() {
+        btn.textContent = L.copied || 'Copied';
+        setTimeout(function () { btn.textContent = L.copy || 'Copy answers'; }, 1500);
+      }
+      function select() { out.focus(); out.select(); }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(out.value).then(done, select);
+      else select();
+    });
+    return add(el('div', 'answers'), el('h3', null, L.answers || 'Your answers'),
+      L.answersLead ? el('p', 'lead', L.answersLead) : null, out, btn);
+  }
+  function verdict(c) {
+    var box = el('div', 'verdict');
+    box.setAttribute('role', 'radiogroup');
+    box.setAttribute('aria-label', c.q);
+    [['ok', L.fine || 'fine'], ['no', L.change || 'change it']].forEach(function (o) {
+      var r = el('input');
+      r.type = 'radio'; r.name = 'c' + c.n; r.value = o[0];
+      r.addEventListener('change', update);
+      add(box, add(el('label', 'v ' + o[0]), r, document.createTextNode(o[1])));
+    });
+    var note = el('input', 'note');
+    note.type = 'text'; note.id = 'c' + c.n + '-note';
+    note.placeholder = L.changeHow || 'What should it be?';
+    note.setAttribute('aria-label', (L.note || 'Note') + ' ' + c.n);
+    note.addEventListener('input', update);
+    return [box, note];
   }
 
   function point(p) {
@@ -838,69 +929,72 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
   }
 
   /* ---------- the page ---------- */
+  var parts = [];
+  function part(node, id, label, n) {
+    if (!node) return;
+    node.id = id;
+    parts.push({ id: id, label: label, n: n });
+    add(root, node);
+  }
+  function stat(n, label, cls, href) {
+    var b = add(el(href ? 'a' : 'div', cls || null), el('strong', null, String(n)), el('span', null, label));
+    if (href) b.href = href;
+    return b;
+  }
+  var steps = [];
+  actors.forEach(function (a) { steps = steps.concat(a.steps || []); });
+  var nNew = steps.filter(function (s) { return s.change === 'new'; }).length;
+  var nChanged = steps.filter(function (s) { return s.change === 'changed'; }).length;
   var mine = decisions.filter(function (c) { return c.by === 'me'; }).length;
+
   var cast = el('ul', 'cast');
   actors.forEach(function (a) {
-    add(cast, add(el('li', a.cls), av(a), add(el('span'), el('strong', null, a.name), a.who ? el('span', 'who', a.who) : null)));
+    var b = add(el('button'), av(a), add(el('span'), el('strong', null, a.name), a.who ? el('span', 'who', a.who) : null));
+    b.type = 'button';
+    b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', function () {
+      var on = root.getAttribute('data-focus') !== a.cls;
+      if (on) root.setAttribute('data-focus', a.cls); else root.removeAttribute('data-focus');
+      cast.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(on && x === b)); });
+    });
+    add(cast, add(el('li', a.cls), b));
   });
-  var open = el('a', 'chip ' + (points.length ? 'gap' : 'ok'), (L.points || 'Still open') + ' ' + points.length);
-  if (points.length) open.href = '#open';
   add(root, add(el('header', 'top'),
     el('p', 'eyebrow', d.status || ''),
     el('h1', null, d.title || ''),
     el('p', 'value', d.value || ''),
-    actors.length ? cast : null,
-    add(el('div', 'counts'),
-      decisions.length ? count(L.decisions || 'Choices', decisions.length) : null,
-      mine ? count(who.me || 'Proposed', mine, 'accent') : null,
-      open)));
+    add(el('div', 'glance'),
+      points.length ? stat(points.length, L.points || 'Still open', 'warn', '#open') : null,
+      mine ? stat(mine, L.toCheck || 'Choices of mine to check', 'hot', '#choices') : null,
+      nNew ? stat(nNew, L.stepsNew || 'New steps', null, '#changes') : null,
+      nChanged ? stat(nChanged, L.stepsChanged || 'Changed steps', null, '#changes') : null,
+      paths.length ? stat(paths.length, L.moments || 'Moments', null, '#flow-moments') : null),
+    actors.length > 1 ? el('p', 'cast-hint', L.focus || 'Pick a person to see only their steps.') : null,
+    actors.length ? cast : null));
+  toCheck = root.querySelector('.glance .hot strong');
 
+  if (paths.length) part(add(section(L.flow || 'The flow'), journeys()), 'flow-moments', L.flow || 'The flow', paths.length);
   if (d.summary && d.summary.length) {
-    var words = el('ul', 'words panel');
-    d.summary.forEach(function (part) {
-      var plain = typeof part === 'string';
-      add(words, add(el('li'), plain || !part.title ? null : el('h3', null, part.title), el('p', null, plain ? part : part.text)));
+    var words = el('ul', 'words');
+    d.summary.forEach(function (x) {
+      var plain = typeof x === 'string';
+      add(words, add(el('li'), plain || !x.title ? null : el('h3', null, x.title), el('p', null, plain ? x : x.text)));
     });
-    add(root, add(section(L.summary || 'The flow in words'), words));
+    part(add(section(L.summary || 'The flow in words'), words), 'words', L.summary || 'The flow in words');
   }
-  if (paths.length) add(root, add(section(L.flow || 'The flow'), mapFigure()));
-  if (d.states && (d.states.nodes || []).length) add(root, add(section(d.states.title || ''), lifeFigure(d.states)));
-
-  if (paths.length) {
-    var board = section(L.steps || 'Step by step');
-    board.className = 'board';
-    paths.forEach(function (p, pi) {
-      var strip = el('ol', 'strip' + (p.steps.length < 3 ? ' roomy' : ''));
-      p.steps.forEach(function (s, i) { add(strip, frame(s, pi + 1, p.steps[i + 1])); });
-      add(board, add(el('div', 'path'),
-        add(el('div', 'path-head'), el('span', 'band-n', String(pi + 1)), el('h3', null, p.title), p.when ? el('span', 'band-when', p.when) : null),
-        strip));
-    });
-    add(root, board);
-  }
+  var ch = changesSection();
+  part(ch, 'changes', L.changes || 'What changes', ch ? ch.querySelectorAll('.change').length : 0);
+  // a life that only goes forward one state at a time is already told by the moments
+  var st = d.states, order = {};
+  ((st && st.nodes) || []).forEach(function (n, i) { order[n.id] = i; });
+  var branching = st && (st.nodes || []).length > 2 && (st.edges || []).some(function (e) { return order[e[1]] - order[e[0]] !== 1; });
+  if (branching) part(add(section(st.title || ''), lifeFigure(st)), 'life', st.title || '');
 
   if (points.length) {
     var box = el('div', 'points');
     points.forEach(function (p) { add(box, point(p)); });
-    out = el('textarea');
-    out.id = 'answers'; out.readOnly = true;
-    out.setAttribute('aria-label', L.answers || 'Your answers');
-    var btn = el('button', null, L.copy || 'Copy answers');
-    btn.type = 'button'; btn.id = 'copy-answers';
-    btn.addEventListener('click', function () {
-      function done() {
-        btn.textContent = L.copied || 'Copied';
-        setTimeout(function () { btn.textContent = L.copy || 'Copy answers'; }, 1500);
-      }
-      function select() { out.focus(); out.select(); }
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(out.value).then(done, select);
-      else select();
-    });
-    var still = add(section(L.points || 'Still open'), box,
-      add(el('div', 'answers'), L.answersLead ? el('p', 'lead', L.answersLead) : null, out, btn));
-    still.id = 'open';
-    add(root, still);
-    update();
+    // the answers box goes after the last thing there is to answer: my choices, or else the open points
+    part(add(section(L.points || 'Still open'), box, mine ? null : answersBox()), 'open', L.points || 'Still open', points.length);
   }
 
   if (decisions.length) {
@@ -911,15 +1005,35 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
       if (!some.length) return;
       var ol = el('ol', 'decisions');
       some.forEach(function (c) {
-        add(ol, add(el('li'), el('span', 'n', String(c.n)), add(el('span'), el('span', 'q', c.q), el('span', 'a', c.a))));
+        var body = add(el('div', 'body'), el('span', 'q', c.q), el('span', 'a', c.a));
+        var at = (c.steps || []).map(function (id) { return stepOf[id]; }).filter(Boolean);
+        if (at.length) {
+          var where = add(el('span', 'in-steps'), el('span', null, L.inSteps || 'In'));
+          at.forEach(function (s) { add(where, stepLink(s, 'id', s.id)); });
+          add(body, where);
+        }
+        if (by === 'me') verdict(c).forEach(function (n) { add(body, n); });
+        var li = add(el('li'), el('span', 'n', String(c.n)), body);
+        li.id = 'c-' + c.n;
+        add(ol, li);
       });
       var det = add(el('details', 'panel'), add(el('summary'), document.createTextNode(who[by] || by),
         el('span', 'chip ' + (by === 'me' ? 'accent' : ''), String(some.length))), ol);
       if (!opened) det.open = opened = true;
       add(groups, det);
     });
-    add(root, add(section(L.decisions || 'The choices behind it'), groups));
+    part(add(section(L.decisions || 'The choices behind it'), groups, mine ? answersBox() : null), 'choices', L.decisions || 'The choices behind it', decisions.length);
   }
+  update();
+
+  // a link to something inside a folded part opens the part first
+  function reveal() {
+    var id = decodeURIComponent(location.hash.slice(1)), n = id && document.getElementById(id);
+    for (var p = n && n.parentNode; p; p = p.parentNode) if (p.tagName === 'DETAILS') p.open = true;
+    if (n) n.scrollIntoView();
+  }
+  window.addEventListener('hashchange', reveal);
+  if (location.hash) reveal();
 
   if (coverage.length) {
     var n = function (status) { return coverage.filter(function (c) { return c.status === status; }).length; };
@@ -937,9 +1051,32 @@ td.ans { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
       count(L.covered || 'Covered', n('covered'), 'ok'),
       count(L.unsupported || 'Not supported', n('unsupported')),
       n('open') ? count(L.open || 'Open', n('open'), 'gap') : null);
-    add(root, add(el('details', 'panel'), sum, L.coverageLead ? el('p', 'lead', L.coverageLead) : null, add(el('div', 'scroll'), add(table, tb))));
+    part(add(el('details', 'panel'), sum, L.coverageLead ? el('p', 'lead', L.coverageLead) : null, add(el('div', 'scroll'), add(table, tb))),
+      'coverage', L.coverage || 'Cases covered', coverage.length);
   }
 
-  if (d.out && d.out.length) add(root, add(section(L.out || 'Out of this flow'), list('plain', d.out)));
+  if (d.out && d.out.length) part(add(section(L.out || 'Out of this flow'), list('plain', d.out)), 'out', L.out || 'Out of this flow', d.out.length);
+
+  /* ---------- the rail: where you are on a long page ---------- */
+  var rail = document.getElementById('rail'), links = {};
+  rail.setAttribute('aria-label', L.contents || 'On this page');
+  var ol = el('ol');
+  parts.forEach(function (x) {
+    var a = add(el('a'), el('span', null, x.label), x.n ? el('span', 'n', String(x.n)) : null);
+    a.href = '#' + x.id;
+    links[x.id] = a;
+    add(ol, add(el('li'), a));
+  });
+  add(rail, ol);
+  if (window.IntersectionObserver) {
+    var seen = {};
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { seen[e.target.id] = e.isIntersecting; });
+      var first = parts.filter(function (x) { return seen[x.id]; })[0];
+      if (!first) return;
+      parts.forEach(function (x) { links[x.id].className = x === first ? 'here' : ''; });
+    }, { rootMargin: '0px 0px -60% 0px' });
+    parts.forEach(function (x) { io.observe(document.getElementById(x.id)); });
+  }
 })();
 </script>

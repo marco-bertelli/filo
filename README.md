@@ -57,25 +57,25 @@ Coding agents are good at building what you describe. They are much worse at not
    ```
 
 4. **You can stop whenever you like.** "You choose" is a valid answer. Whatever is left takes its recommendation, marked as its own choice so you can object later.
-5. **It draws the flow as one page**: the flow explained in words, a map, the life of the main object, a storyboard with the screens that change, every choice and who made it, and a table where every case the system knows has an answer.
+5. **It draws the flow as one page**: the numbers that matter at the top, each moment as one line of steps, the flow explained in words, what changes on each surface with today beside tomorrow and the screens, the life of the main object, every choice and who made it, and a table where every case the system knows has an answer. Parts that do not apply to this flow are left out.
 6. **You approve, it saves.** The flow goes into `product/flows/<name>.md` with its choices and acceptance scenarios, followed by a short build plan. No product code is written before this point.
 
 A whole feature takes eight to fifteen questions.
 
 ## The page
 
-The page is the same every time, so the tenth flow reads as fast as the first. It is drawn from data: the plugin never hand-draws a diagram.
+The page looks the same every time, so the tenth flow reads as fast as the first, but its parts follow the flow: overview first, details after, and nothing drawn for steps that stay as they are. It is drawn from data: the plugin never hand-draws a diagram.
 
 | | |
 |---|---|
-| <img src="docs/img/page-map.png" alt="The map: one column per person, one band per moment, a dark arrow where the flow passes to somebody else" width="400"> | <img src="docs/img/page-words.png" alt="The top of the page: the flow explained in words" width="400"> |
-| **The map.** One column per person, one band per moment. A dark arrow is a handoff. | **The flow in words.** What was decided, why, and what follows from it. |
+| <img src="docs/img/page-map.png" alt="The flow: one line of steps per moment, coloured by who acts, a dark arrow where it passes to somebody else" width="400"> | <img src="docs/img/page-words.png" alt="The top of the page: the flow explained in words" width="400"> |
+| **The flow.** One line of steps per moment, coloured by who acts. A dark arrow is a handoff. | **The flow in words.** What was decided, why, and what follows from it. |
 
 <p align="center">
-  <img src="docs/img/page-storyboard.png" alt="The storyboard: one strip of frames per moment, each with who acts, what they see, and a sketch of the screens that change" width="820">
+  <img src="docs/img/page-storyboard.png" alt="What changes: one row per step that is new or changes, grouped by surface, with today beside tomorrow and a sketch of the screen" width="820">
 </p>
 
-**The storyboard.** One strip per moment, with a sketch of every screen that is new or changes. Around it: the life of the main object, every choice with who made it, and a table where every case the system knows has an answer.
+**What changes.** One row per step that is new or changes, grouped by surface, with today beside tomorrow and a sketch of the screen. Around it: the life of the main object, every choice with who made it, and a table where every case the system knows has an answer.
 
 More in [docs/page.md](docs/page.md).
 
@@ -145,13 +145,13 @@ They answer a different question. Plan mode and brainstorming skills decide **ho
 
 - **It reads the product, not only the code to change.** Roles, states, timed jobs and past decisions become the cases it asks about, so the questions are about your system, not generic ones.
 - **It keeps every answer and checks the next one against it.** A plan is written once; filo stops the moment two choices, or a choice and the product, do not fit.
-- **It leaves something a person can read.** One page with the map, the screens and every choice, and a flow file with acceptance scenarios that the plan and the review can be held to.
+- **It leaves something a person can read.** One page with every moment, what changes, the screens and every choice, and a flow file with acceptance scenarios that the plan and the review can be held to.
 
 They work well together: decide the flow with filo, then hand the saved file to plan mode or your planning skill.
 
 ## Status
 
-Beta, version `0.1.0-beta.1`.
+Beta, version `0.1.0-beta.2`.
 
 - **Used for real**, on features of a multi-repository product, and checked with scripted multi-turn sessions and rendered pages. Not yet used widely: expect rough edges on stacks and products unlike the ones it grew up on.
 - **Depends on the model.** The reading and the contradiction check are as good as the model running them. Use a strong one.

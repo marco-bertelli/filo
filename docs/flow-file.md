@@ -38,7 +38,7 @@ A1. **<Step>** (<surface>; new | changed | same). What they see and do.
 - <State>: how it gets there. Then: <the states it can go to>.
 
 ## Choices
-1. **<Question>** <the choice>. By: <the user | proposed and accepted | decided before>. Why: <reason>. Discarded: <the others>.
+1. **<Question>** <the choice>. By: <the user | proposed and accepted | decided before>. Why: <reason>. Discarded: <the others>. Steps: <ids, when the choice shows in particular steps>.
 
 ## Coverage
 | Case | Source | Answer |

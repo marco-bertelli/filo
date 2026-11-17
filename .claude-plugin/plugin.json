@@ -1,8 +1,8 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "filo",
-  "version": "0.1.0-beta.1",
-  "description": "Design a feature's flow before the code: an interview that reads the system first and asks one question at a time, flags answers that contradict each other, then draws the flow as a page (explained in words, a map by moment, a storyboard with the screens) and saves it in the project once approved.",
+  "version": "0.1.0-beta.2",
+  "description": "Design a feature's flow before the code: an interview that reads the system first and asks one question at a time, flags answers that contradict each other, then draws the flow as a page (each moment as a line of steps, the reasons in words, what changes on each surface with today beside tomorrow and the screens) and saves it in the project once approved.",
   "author": {
     "name": "Marco Bertelli",
     "url": "https://github.com/marco-bertelli"
